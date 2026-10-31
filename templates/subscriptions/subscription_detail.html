@@ -1,0 +1,234 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ subscription.number }} - SubSentry{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Breadcrumb & Back -->
+    <div class="mb-3 d-flex justify-content-between align-items-center">
+        <a href="{% url 'subscriptions:list' %}" class="btn btn-outline-secondary btn-sm">&larr; Back to Subscriptions</a>
+        <span class="text-muted small">Created: {{ subscription.created_at|date:"M d, Y H:i" }}</span>
+    </div>
+
+    <!-- Header Card -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body p-4">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+                <div>
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <h1 class="h3 fw-bold mb-0">{{ subscription.number }}</h1>
+                        {% if subscription.status == 'active' %}
+                            <span class="badge bg-success fs-6">Active</span>
+                        {% elif subscription.status == 'draft' %}
+                            <span class="badge bg-secondary fs-6">Draft</span>
+                        {% elif subscription.status == 'quotation' %}
+                            <span class="badge bg-info text-dark fs-6">Quotation</span>
+                        {% elif subscription.status == 'confirmed' %}
+                            <span class="badge bg-primary fs-6">Confirmed</span>
+                        {% elif subscription.status == 'paused' %}
+                            <span class="badge bg-warning text-dark fs-6">Paused</span>
+                        {% elif subscription.status == 'closed' %}
+                            <span class="badge bg-dark fs-6">Closed</span>
+                        {% endif %}
+                    </div>
+                    <p class="text-muted mb-0">
+                        Customer: <strong class="text-dark">{{ subscription.customer.email }}</strong> | 
+                        Plan: <strong class="text-dark">{{ subscription.plan.name }}</strong> ({{ subscription.plan.get_billing_period_display }})
+                    </p>
+                </div>
+
+                <!-- Action Toolbar for Staff/Admin -->
+                {% if is_staff %}
+                <div class="d-flex flex-wrap gap-2">
+                    {% if subscription.status == 'draft' %}
+                        <form method="post" action="{% url 'subscriptions:action' subscription.pk 'quotation' %}" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-info btn-sm">Mark as Quotation</button>
+                        </form>
+                        <form method="post" action="{% url 'subscriptions:action' subscription.pk 'confirm' %}" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-primary btn-sm">Confirm</button>
+                        </form>
+                        <form method="post" action="{% url 'subscriptions:action' subscription.pk 'activate' %}" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-success btn-sm">Activate</button>
+                        </form>
+                    {% elif subscription.status == 'quotation' %}
+                        <form method="post" action="{% url 'subscriptions:action' subscription.pk 'confirm' %}" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-primary btn-sm">Confirm</button>
+                        </form>
+                        <form method="post" action="{% url 'subscriptions:action' subscription.pk 'activate' %}" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-success btn-sm">Activate</button>
+                        </form>
+                    {% elif subscription.status == 'confirmed' %}
+                        <form method="post" action="{% url 'subscriptions:action' subscription.pk 'activate' %}" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-success btn-sm">Activate Now</button>
+                        </form>
+                    {% elif subscription.status == 'active' %}
+                        {% if subscription.plan.is_pausable %}
+                            <form method="post" action="{% url 'subscriptions:action' subscription.pk 'pause' %}" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-warning btn-sm">Pause Subscription</button>
+                            </form>
+                        {% else %}
+                            <button type="button" class="btn btn-outline-warning btn-sm disabled" title="Plan does not allow pausing">Pause (Not allowed)</button>
+                        {% endif %}
+
+                        {% if subscription.plan.is_closable %}
+                            <form method="post" action="{% url 'subscriptions:action' subscription.pk 'close' %}" class="d-inline" onsubmit="return confirm('Are you sure you want to close this subscription early?');">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-outline-danger btn-sm">Close Early</button>
+                            </form>
+                        {% else %}
+                            <button type="button" class="btn btn-outline-secondary btn-sm disabled" title="Plan cannot be closed early">Close (Not allowed)</button>
+                        {% endif %}
+
+                        {% if subscription.plan.is_renewable %}
+                            <form method="post" action="{% url 'subscriptions:action' subscription.pk 'renew' %}" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-outline-primary btn-sm">Renew Next Term</button>
+                            </form>
+                        {% endif %}
+                    {% elif subscription.status == 'paused' %}
+                        <form method="post" action="{% url 'subscriptions:action' subscription.pk 'resume' %}" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-success btn-sm">Resume Subscription</button>
+                        </form>
+                        {% if subscription.plan.is_closable %}
+                            <form method="post" action="{% url 'subscriptions:action' subscription.pk 'close' %}" class="d-inline" onsubmit="return confirm('Close this subscription?');">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-outline-danger btn-sm">Close</button>
+                            </form>
+                        {% endif %}
+                    {% elif subscription.status == 'closed' %}
+                        {% if subscription.plan.is_renewable %}
+                            <form method="post" action="{% url 'subscriptions:action' subscription.pk 'renew' %}" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-primary btn-sm">Renew Contract</button>
+                            </form>
+                        {% endif %}
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+
+            <hr class="my-3">
+
+            <!-- Meta details grid -->
+            <div class="row g-3 small">
+                <div class="col-6 col-md-3">
+                    <span class="text-muted d-block">Start Date</span>
+                    <strong class="text-dark">{{ subscription.start_date|date:"M d, Y" }}</strong>
+                </div>
+                <div class="col-6 col-md-3">
+                    <span class="text-muted d-block">Expiry Date</span>
+                    <strong class="text-dark">{{ subscription.expiry_date|date:"M d, Y"|default:"Open-ended" }}</strong>
+                </div>
+                <div class="col-6 col-md-3">
+                    <span class="text-muted d-block">Next Invoice Date</span>
+                    <strong class="text-primary">{{ subscription.next_invoice_date|date:"M d, Y"|default:"—" }}</strong>
+                </div>
+                <div class="col-6 col-md-3">
+                    <span class="text-muted d-block">Payment Terms</span>
+                    <strong class="text-dark">{{ subscription.payment_terms_days }} Days</strong>
+                </div>
+                {% if subscription.quotation_valid_until %}
+                <div class="col-6 col-md-3">
+                    <span class="text-muted d-block">Quotation Valid Until</span>
+                    <strong class="text-dark">{{ subscription.quotation_valid_until|date:"M d, Y" }}</strong>
+                </div>
+                {% endif %}
+                {% if subscription.template %}
+                <div class="col-6 col-md-3">
+                    <span class="text-muted d-block">Origin Template</span>
+                    <strong class="text-dark">{{ subscription.template.name }}</strong>
+                </div>
+                {% endif %}
+                {% if subscription.discount %}
+                <div class="col-6 col-md-3">
+                    <span class="text-muted d-block">Discount Rule</span>
+                    <span class="badge bg-success-subtle text-success border border-success">{{ subscription.discount.name }}</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Product Lines Table -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-white py-3">
+            <h2 class="h5 fw-bold mb-0">Subscription Lines</h2>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <thead class="table-light small">
+                        <tr>
+                            <th class="ps-3">Product</th>
+                            <th>Variant</th>
+                            <th class="text-center">Quantity</th>
+                            <th class="text-end">Unit Price</th>
+                            <th class="text-end">Tax</th>
+                            <th class="text-end pe-3">Line Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for line in lines %}
+                        <tr>
+                            <td class="ps-3 fw-semibold">{{ line.product.name }}</td>
+                            <td>
+                                {% if line.variant %}
+                                    <span class="badge bg-light text-dark border">
+                                        {{ line.variant.attribute }}: {{ line.variant.value }} (+${{ line.variant.extra_price }})
+                                    </span>
+                                {% else %}
+                                    <span class="text-muted">—</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">{{ line.quantity }}</td>
+                            <td class="text-end">${{ line.unit_price }}</td>
+                            <td class="text-end">
+                                {% if line.tax %}
+                                    {{ line.tax.name }} ({{ line.tax.rate }}%): ${{ line.tax_amount }}
+                                {% else %}
+                                    <span class="text-muted">No Tax</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end pe-3 fw-bold">${{ line.amount }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center py-4 text-muted">
+                                No lines recorded for this subscription.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card-footer bg-light py-3">
+            <div class="row justify-content-end">
+                <div class="col-md-5 col-lg-4">
+                    <div class="d-flex justify-content-between mb-1 small">
+                        <span class="text-muted">Subtotal:</span>
+                        <span class="fw-semibold">${{ subtotal }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2 small">
+                        <span class="text-muted">Taxes:</span>
+                        <span class="fw-semibold">${{ tax_total }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between border-top pt-2">
+                        <span class="fw-bold">Total (per billing period):</span>
+                        <span class="fw-bold fs-5 text-primary">${{ total }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
