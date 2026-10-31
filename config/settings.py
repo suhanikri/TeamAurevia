@@ -125,3 +125,33 @@ MAILERS = {
         'BACKEND': 'django.core.mail.backends.console.EmailBackend',
     },
 }
+
+
+# SubSentry Configurations
+INSTALLED_APPS += [
+    'accounts',
+    'catalog',
+    'subscriptions',
+    'billing',
+    'reports',
+]
+
+AUTH_USER_MODEL = 'accounts.User'
+
+AUTH_PASSWORD_VALIDATORS = [
+    {
+        'NAME': 'accounts.validators.StrongPasswordValidator',
+    },
+]
+
+TEMPLATES[0]['DIRS'] = [BASE_DIR / 'templates']
+STATICFILES_DIRS = [BASE_DIR / 'static']
+
+LOGIN_URL = '/accounts/login/'
+LOGIN_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = '/accounts/login/'
+
+del MAILERS
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+TIME_ZONE = 'Asia/Kolkata'
+
