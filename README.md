@@ -174,3 +174,9 @@ To maintain focus on core billing integrity and enterprise scale during the hack
 | **P2** | Team Aurevia | Catalog Management, Product Variants, Plan Rules, Pricing Engine |
 | **P3** | Team Aurevia | Customer Portal, Invoicing UI, Responsive Layouts |
 | **P4** | Team Aurevia | Payment Settlement, Financial Analytics Dashboard, Seed Engine, Pitch & Benchmarks |
+
+## Live demo
+https://YOUR-APP.onrender.com
+
+Logins: admin@subsentry.test / Admin@12345, staff@subsentry.test / Staff@12345, demo@subsentry.test / Demo@12345
+
