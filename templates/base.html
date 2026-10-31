@@ -1,208 +1,214 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}SubSentry{% endblock %} | SubSentry Platform</title>
+    <title>{% block title %}SubSentry - Subscription Management{% endblock %}</title>
+
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Bootstrap 5 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Bootstrap Icons -->
+
+    <!-- Bootstrap 5 CSS (CDN) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+
+    <!-- Bootstrap Icons (CDN) -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-    <style>
-        :root {
-            --bs-body-font-family: 'Inter', system-ui, -apple-system, sans-serif;
-            --primary-gradient: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%);
-        }
-        body {
-            font-family: var(--bs-body-font-family);
-            background-color: #f8fafc;
-            color: #1e293b;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-        .navbar-subsentry {
-            background: #ffffff;
-            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
-            border-bottom: 1px solid #e2e8f0;
-        }
-        .brand-badge {
-            background: var(--primary-gradient);
-            color: white;
-            font-weight: 700;
-            padding: 0.35rem 0.65rem;
-            border-radius: 8px;
-            letter-spacing: -0.025em;
-        }
-        .nav-link {
-            font-weight: 500;
-            color: #475569;
-            transition: color 0.15s ease;
-        }
-        .nav-link:hover, .nav-link.active {
-            color: #4f46e5;
-        }
-        .main-container {
-            flex: 1 0 auto;
-            padding-top: 1.75rem;
-            padding-bottom: 3rem;
-        }
-        .card {
-            border: 1px solid #e2e8f0;
-            border-radius: 12px;
-            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.03);
-            background: #ffffff;
-        }
-        .card-header {
-            background-color: #ffffff;
-            border-bottom: 1px solid #f1f5f9;
-            font-weight: 600;
-        }
-        .table > :not(caption) > * > * {
-            padding: 0.85rem 1rem;
-            vertical-align: middle;
-        }
-        .badge {
-            font-weight: 500;
-            padding: 0.4em 0.65em;
-            letter-spacing: 0.01em;
-        }
-        .btn {
-            border-radius: 8px;
-            font-weight: 500;
-            padding: 0.45rem 0.95rem;
-        }
-        .btn-primary {
-            background-color: #4f46e5;
-            border-color: #4f46e5;
-        }
-        .btn-primary:hover {
-            background-color: #4338ca;
-            border-color: #4338ca;
-        }
-        .page-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 1.5rem;
-            flex-wrap: wrap;
-            gap: 1rem;
-        }
-        .page-header h1 {
-            font-size: 1.5rem;
-            font-weight: 700;
-            margin: 0;
-            color: #0f172a;
-        }
-        .footer {
-            background: #ffffff;
-            border-top: 1px solid #e2e8f0;
-            padding: 1rem 0;
-            color: #64748b;
-            font-size: 0.875rem;
-        }
-    </style>
+
+    <!-- SubSentry Custom Styles & Print Stylesheet -->
+    <link href="{% static 'css/app.css' %}" rel="stylesheet">
 </head>
-<body>
-    <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-subsentry sticky-top">
-        <div class="container-fluid px-4">
-            <a class="navbar-brand d-flex align-items-center gap-2" href="/dashboard/">
-                <span class="brand-badge"><i class="bi bi-shield-check me-1"></i>SubSentry</span>
-                <span class="text-muted small d-none d-sm-inline">Brightloop Software</span>
+<body class="bg-light">
+
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom shadow-sm sticky-top no-print">
+        <div class="container-fluid px-lg-4">
+            <!-- Brand & Tagline -->
+            <a class="navbar-brand d-flex align-items-center gap-2 py-1" href="/">
+                <span class="d-inline-flex align-items-center justify-content-center bg-primary text-white rounded-2 p-1 px-2 shadow-sm">
+                    <i class="bi bi-shield-check fs-5"></i>
+                </span>
+                <span class="fw-bold text-dark fs-5">SubSentry</span>
+                <span class="d-none d-xl-inline text-muted small border-start ps-2 ms-1 text-truncate" style="max-width: 320px;">
+                    Every subscription billed once, billed right
+                </span>
             </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+
+            <!-- Mobile Toggle -->
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain" aria-controls="navbarMain" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
 
-            <div class="collapse navbar-collapse" id="navbarContent">
+            <!-- Nav Links by Role -->
+            <div class="collapse navbar-collapse" id="navbarMain">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-3">
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.path == '/dashboard/' %}active{% endif %}" href="/dashboard/">
-                            <i class="bi bi-speedometer2 me-1"></i>Dashboard
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {% if '/subscriptions/' in request.path %}active{% endif %}" href="{% url 'subscriptions:list' %}">
-                            <i class="bi bi-arrow-repeat me-1"></i>Subscriptions
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {% if 'products' in request.path %}active{% endif %}" href="/catalog/">
-                            <i class="bi bi-box-seam me-1"></i>Catalog
-                        </a>
-                    </li>
+                    {% if request.user.is_authenticated %}
+                        {% if request.user.role == 'admin' %}
+                            <!-- Admin Navigation -->
+                            <li class="nav-item">
+                                <a class="nav-link {% if request.path == '/dashboard/' or request.path == '/' %}active{% endif %}" href="/dashboard/">
+                                    <i class="bi bi-speedometer2 me-1"></i>Dashboard
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {% if '/catalog/' in request.path %}active{% endif %}" href="/catalog/">
+                                    <i class="bi bi-box-seam me-1"></i>Catalog
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {% if '/subscriptions/' in request.path and '/portal/' not in request.path %}active{% endif %}" href="/subscriptions/">
+                                    <i class="bi bi-card-checklist me-1"></i>Subscriptions
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {% if '/invoices/' in request.path and '/portal/' not in request.path %}active{% endif %}" href="/invoices/">
+                                    <i class="bi bi-receipt me-1"></i>Invoices
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {% if '/billing/' in request.path %}active{% endif %}" href="/billing/">
+                                    <i class="bi bi-gear-wide-connected me-1"></i>Billing Run
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {% if '/payments/' in request.path and '/portal/' not in request.path %}active{% endif %}" href="/payments/">
+                                    <i class="bi bi-credit-card me-1"></i>Payments
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {% if request.path == '/accounts/staff/new/' %}active{% endif %}" href="/accounts/staff/new/">
+                                    <i class="bi bi-person-plus me-1"></i>Add Staff
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {% if '/admin/' in request.path %}active{% endif %}" href="/admin/">
+                                    <i class="bi bi-shield-lock me-1"></i>Admin Panel
+                                </a>
+                            </li>
+
+                        {% elif request.user.role == 'staff' %}
+                            <!-- Staff Navigation -->
+                            <li class="nav-item">
+                                <a class="nav-link {% if request.path == '/dashboard/' or request.path == '/' %}active{% endif %}" href="/dashboard/">
+                                    <i class="bi bi-speedometer2 me-1"></i>Dashboard
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {% if '/catalog/' in request.path %}active{% endif %}" href="/catalog/">
+                                    <i class="bi bi-box-seam me-1"></i>Catalog
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {% if '/subscriptions/' in request.path and '/portal/' not in request.path %}active{% endif %}" href="/subscriptions/">
+                                    <i class="bi bi-card-checklist me-1"></i>Subscriptions
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {% if '/invoices/' in request.path and '/portal/' not in request.path %}active{% endif %}" href="/invoices/">
+                                    <i class="bi bi-receipt me-1"></i>Invoices
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {% if '/billing/' in request.path %}active{% endif %}" href="/billing/">
+                                    <i class="bi bi-gear-wide-connected me-1"></i>Billing Run
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {% if '/payments/' in request.path and '/portal/' not in request.path %}active{% endif %}" href="/payments/">
+                                    <i class="bi bi-credit-card me-1"></i>Payments
+                                </a>
+                            </li>
+
+                        {% elif request.user.role == 'customer' %}
+                            <!-- Customer Navigation -->
+                            <li class="nav-item">
+                                <a class="nav-link {% if request.path == '/portal/' or '/portal/subscriptions/' in request.path %}active{% endif %}" href="/portal/">
+                                    <i class="bi bi-collection me-1"></i>My Subscriptions
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {% if '/portal/invoices/' in request.path %}active{% endif %}" href="/portal/invoices/">
+                                    <i class="bi bi-receipt me-1"></i>My Invoices
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {% if '/portal/payments/' in request.path %}active{% endif %}" href="/portal/payments/">
+                                    <i class="bi bi-wallet2 me-1"></i>My Payments
+                                </a>
+                            </li>
+                        {% endif %}
+                    {% endif %}
                 </ul>
 
-                <div class="d-flex align-items-center gap-3">
-                    {% if user.is_authenticated %}
-                        <div class="d-flex align-items-center gap-2">
-                            {% if user.role == 'admin' %}
-                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle"><i class="bi bi-shield-lock-fill me-1"></i>Admin</span>
-                            {% elif user.role == 'staff' %}
-                                <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle"><i class="bi bi-person-badge me-1"></i>Staff</span>
-                            {% else %}
-                                <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">Customer</span>
-                            {% endif %}
-                            <span class="text-muted small d-none d-md-inline">{{ user.email }}</span>
-                            <form method="post" action="{% url 'accounts:logout' %}" class="d-inline ms-2">
-                                {% csrf_token %}
-                                <button type="submit" class="btn btn-outline-secondary btn-sm py-1 px-2">Logout</button>
-                            </form>
+                <!-- User Profile / Auth Actions -->
+                <div class="d-flex align-items-center gap-2 mt-2 mt-lg-0">
+                    {% if request.user.is_authenticated %}
+                        <div class="d-flex align-items-center text-muted small me-1">
+                            <i class="bi bi-person-circle fs-5 me-1 text-primary"></i>
+                            <span class="text-truncate fw-medium" style="max-width: 200px;">{{ request.user.email }}</span>
+                            <span class="badge ms-2 {% if request.user.role == 'admin' %}bg-primary{% elif request.user.role == 'staff' %}bg-info text-dark{% else %}bg-secondary{% endif %} text-uppercase">
+                                {{ request.user.role }}
+                            </span>
                         </div>
+                        <form method="post" action="/accounts/logout/" class="d-inline logout-form m-0">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-outline-danger d-inline-flex align-items-center shadow-none">
+                                <i class="bi bi-box-arrow-right me-1"></i>Logout
+                            </button>
+                        </form>
                     {% else %}
-                        <a href="/accounts/login/" class="btn btn-sm btn-outline-primary">Login</a>
+                        <a href="/accounts/login/" class="btn btn-sm btn-outline-primary px-3 {% if request.path == '/accounts/login/' %}active{% endif %}">
+                            <i class="bi bi-box-arrow-in-right me-1"></i>Login
+                        </a>
+                        <a href="/accounts/signup/" class="btn btn-sm btn-primary px-3 {% if request.path == '/accounts/signup/' %}active{% endif %}">
+                            <i class="bi bi-person-plus me-1"></i>Sign Up
+                        </a>
                     {% endif %}
                 </div>
             </div>
         </div>
     </nav>
 
-    <!-- Main Container -->
-    <main class="main-container">
-        <div class="container-fluid px-4">
-            <!-- Django Messages -->
-            {% if messages %}
-                <div class="row">
-                    <div class="col-12">
-                        {% for message in messages %}
-                            <div class="alert alert-{% if message.tags == 'error' %}danger{% elif message.tags %}{{ message.tags }}{% else %}primary{% endif %} alert-dismissible fade show shadow-sm" role="alert">
-                                {% if message.tags == 'success' %}
-                                    <i class="bi bi-check-circle-fill me-2"></i>
-                                {% elif message.tags == 'error' or message.tags == 'danger' %}
-                                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                                {% elif message.tags == 'warning' %}
-                                    <i class="bi bi-exclamation-circle-fill me-2"></i>
-                                {% else %}
-                                    <i class="bi bi-info-circle-fill me-2"></i>
-                                {% endif %}
-                                {{ message }}
-                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                            </div>
-                        {% endfor %}
-                    </div>
-                </div>
-            {% endif %}
-
-            <!-- Page Content -->
-            {% block content %}{% endblock %}
+    <!-- Django Messages Area -->
+    {% if messages %}
+    <div class="container mt-3 no-print">
+        {% for message in messages %}
+        <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags|default:'info' }}{% endif %} alert-dismissible fade show shadow-sm d-flex align-items-center mb-2" role="alert">
+            <i class="bi {% if message.tags == 'error' %}bi-exclamation-triangle-fill text-danger{% elif message.tags == 'success' %}bi-check-circle-fill text-success{% elif message.tags == 'warning' %}bi-exclamation-circle-fill text-warning{% else %}bi-info-circle-fill text-info{% endif %} me-2 fs-5"></i>
+            <div class="flex-grow-1">{{ message }}</div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Main Content Area -->
+    <main class="flex-grow-1 main-container">
+        {% block content %}{% endblock %}
     </main>
 
-    <!-- Footer -->
-    <footer class="footer mt-auto">
-        <div class="container-fluid px-4 d-flex justify-content-between align-items-center">
-            <span>&copy; 2026 Brightloop Software &bull; SubSentry Subscription Platform</span>
-            <span>Billing Integrity Engine Active <i class="bi bi-check2-circle text-success"></i></span>
+    <!-- Application Footer -->
+    <footer class="app-footer py-3 mt-5 no-print">
+        <div class="container-fluid px-lg-4 d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2">
+            <div class="d-flex align-items-center gap-2">
+                <span class="fw-bold text-primary">SubSentry</span>
+                <span class="text-muted">&middot;</span>
+                <span class="text-muted small">Every subscription billed once, billed right</span>
+            </div>
+            <div class="text-muted small d-flex align-items-center gap-2">
+                <span>Brightloop Software &copy; {% now "Y" %}</span>
+                <span class="text-muted">&bull;</span>
+                <span class="text-success small fw-semibold"><i class="bi bi-check2-circle me-1"></i>Billing Integrity Engine Active</span>
+            </div>
         </div>
     </footer>
 
-    <!-- Bootstrap 5 JS Bundle -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Bootstrap 5 Bundle JS (CDN) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+
+    <!-- Shared UI Helpers (e.g. Password Toggle) -->
     <script>
         function togglePassword(inputId, btn) {
             const input = document.getElementById(inputId);
@@ -220,6 +226,7 @@
             }
         }
     </script>
+
     {% block extra_js %}{% endblock %}
 </body>
 </html>

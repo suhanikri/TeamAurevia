@@ -1,0 +1,23 @@
+{% with s=status|lower|default:'' %}
+  {% if s == 'draft' %}
+    <span class="badge bg-secondary text-white">Draft</span>
+  {% elif s == 'quotation' %}
+    <span class="badge bg-info text-dark">Quotation</span>
+  {% elif s == 'confirmed' %}
+    <span class="badge badge-indigo text-white">Confirmed</span>
+  {% elif s == 'active' %}
+    <span class="badge bg-success text-white">Active</span>
+  {% elif s == 'paused' %}
+    <span class="badge bg-warning text-dark">Paused</span>
+  {% elif s == 'closed' %}
+    <span class="badge bg-dark text-white">Closed</span>
+  {% elif s == 'paid' %}
+    <span class="badge bg-success text-white">Paid</span>
+  {% elif s == 'cancelled' %}
+    <span class="badge bg-danger text-white">Cancelled</span>
+  {% elif s == 'overdue' %}
+    <span class="badge bg-danger text-white">Overdue</span>
+  {% else %}
+    <span class="badge bg-secondary text-white">{{ status|default:'-'|title }}</span>
+  {% endif %}
+{% endwith %}

@@ -1,0 +1,44 @@
+{% load subsentry_extras %}
+{% if field %}
+  {% if field|is_checkbox %}
+    <div class="mb-3 form-check">
+      {% if field.errors %}
+        {{ field|add_class:"form-check-input is-invalid" }}
+      {% else %}
+        {{ field|add_class:"form-check-input" }}
+      {% endif %}
+      <label class="form-check-label" for="{{ field.id_for_label }}">
+        {{ field.label }}
+        {% if field.field.required %}<span class="text-danger">*</span>{% endif %}
+      </label>
+      {% if field.help_text %}
+        <div class="form-text text-muted">{{ field.help_text }}</div>
+      {% endif %}
+      {% for error in field.errors %}
+        <div class="invalid-feedback d-block">{{ error }}</div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="mb-3">
+      {% if field.label %}
+        <label class="form-label fw-semibold" for="{{ field.id_for_label }}">
+          {{ field.label }}
+          {% if field.field.required %}<span class="text-danger">*</span>{% endif %}
+        </label>
+      {% endif %}
+
+      {% if field.errors %}
+        {{ field|add_class:"form-control is-invalid" }}
+      {% else %}
+        {{ field|add_class:"form-control" }}
+      {% endif %}
+
+      {% if field.help_text %}
+        <div class="form-text text-muted">{{ field.help_text }}</div>
+      {% endif %}
+      {% for error in field.errors %}
+        <div class="invalid-feedback d-block">{{ error }}</div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endif %}

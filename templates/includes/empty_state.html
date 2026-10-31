@@ -1,0 +1,17 @@
+<div class="empty-state card border-dashed p-5 text-center my-4 bg-light-subtle">
+    <div class="empty-state-icon text-muted mb-3">
+        <i class="bi {{ icon|default:'bi-folder2-open' }} display-3 text-secondary opacity-50"></i>
+    </div>
+    <h5 class="fw-bold text-dark mb-2">{{ title|default:'No Records Found' }}</h5>
+    <p class="text-muted mx-auto mb-3" style="max-width: 480px;">
+        {{ message|default:'There are no items to display at this time.' }}
+    </p>
+    {% if action_url and action_text %}
+    <div class="mt-2">
+        <a href="{{ action_url }}" class="btn btn-primary px-4 shadow-sm">
+            {% if action_icon %}<i class="bi {{ action_icon }} me-1"></i>{% endif %}
+            {{ action_text }}
+        </a>
+    </div>
+    {% endif %}
+</div>
