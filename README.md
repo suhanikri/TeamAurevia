@@ -1,4 +1,4 @@
-# SubSentry
+﻿# SubSentry
 
 > *"Every subscription billed once, billed right."*
 
@@ -6,7 +6,7 @@ SubSentry is a high-performance, audit-grade subscription management and recurri
 
 ---
 
-## 🌟 The Problem & The Billing Integrity Engine
+## ðŸŒŸ The Problem & The Billing Integrity Engine
 
 In recurring SaaS billing, edge cases cost millions:
 - Duplicate invoices issued for the same cycle when billing runs retry or overlap.
@@ -26,7 +26,7 @@ SubSentry features a deterministic **Billing Integrity Engine** that inspects ca
 
 ---
 
-## 🛠️ Tech Stack
+## ðŸ› ï¸ Tech Stack
 
 - **Backend:** Python 3.13, Django 6.1
 - **Database:** SQLite (optimized with multi-column indices, DB-level aggregation, and bulk operations)
@@ -36,7 +36,7 @@ SubSentry features a deterministic **Billing Integrity Engine** that inspects ca
 
 ---
 
-## 🚀 Quickstart & Setup (Windows PowerShell)
+## ðŸš€ Quickstart & Setup (Windows PowerShell)
 
 Follow these steps to clone, configure, and launch SubSentry locally:
 
@@ -70,7 +70,7 @@ Open your browser at: **`http://127.0.0.1:8000/`**
 
 ---
 
-## 🔑 Demo Credentials
+## ðŸ”‘ Demo Credentials
 
 | Role | Email | Password | Access Level |
 | :--- | :--- | :--- | :--- |
@@ -82,7 +82,7 @@ Open your browser at: **`http://127.0.0.1:8000/`**
 
 ---
 
-## 👥 Role Permissions Matrix
+## ðŸ‘¥ Role Permissions Matrix
 
 | Feature / URL Path | Admin | Staff | Customer | Anonymous |
 | :--- | :---: | :---: | :---: | :---: |
@@ -98,42 +98,42 @@ Open your browser at: **`http://127.0.0.1:8000/`**
 
 ---
 
-## 📁 Repository Structure
+## ðŸ“ Repository Structure
 
 ```text
 TeamAurevia/
-├── accounts/               # Custom User model, auth views, role guards, staff management
-├── billing/                # Invoices, payments, Billing Integrity Engine, Review Queue
-│   ├── engine.py           # Core validation & invoice generation algorithms
-│   ├── payments.py         # Atomic payment recording & balance settlement
-│   ├── payment_views.py    # Ledger, aging receivables, and record payment views
-│   └── tests_*.py          # Comprehensive test suites for engine and payments
-├── catalog/                # Products, variants, plans, tax rules, discounts, templates
-├── config/                 # Django settings, root URLs, role redirector
-├── docs/                   # Architectural notes and pitch collateral
-│   └── PITCH.md            # Hackathon pitch script and slide presentation outline
-├── portal/                 # Customer self-service views
-├── reports/                # Executive analytics, services, aggregation queries
-│   ├── services.py         # MRR calculation, receivables aging, chart data
-│   ├── views.py            # Dashboard and CSV export summary
-│   └── tests.py            # Financial and metric mathematical verification tests
-├── subscriptions/          # Contract lifecycle, quotation-to-subscription workflows
-├── templates/              # Bootstrap 5 responsive templates
-│   ├── accounts/           # Auth and staff administration
-│   ├── base.html           # Core layout with navigation and alerts
-│   ├── billing/            # Billing run preview, execution, and review queue
-│   ├── payments/           # Payment settlement and aging screens
-│   ├── reports/            # Executive dashboard and summary table
-│   └── subscriptions/      # Subscription registry and detail pages
-├── perf_check.py           # Latency SLO benchmark tester
-├── seed.py                 # Deterministic high-volume dataset generator
-├── manage.py
-└── requirements.txt
+â”œâ”€â”€ accounts/               # Custom User model, auth views, role guards, staff management
+â”œâ”€â”€ billing/                # Invoices, payments, Billing Integrity Engine, Review Queue
+â”‚   â”œâ”€â”€ engine.py           # Core validation & invoice generation algorithms
+â”‚   â”œâ”€â”€ payments.py         # Atomic payment recording & balance settlement
+â”‚   â”œâ”€â”€ payment_views.py    # Ledger, aging receivables, and record payment views
+â”‚   â””â”€â”€ tests_*.py          # Comprehensive test suites for engine and payments
+â”œâ”€â”€ catalog/                # Products, variants, plans, tax rules, discounts, templates
+â”œâ”€â”€ config/                 # Django settings, root URLs, role redirector
+â”œâ”€â”€ docs/                   # Architectural notes and pitch collateral
+â”‚   â””â”€â”€ PITCH.md            # Hackathon pitch script and slide presentation outline
+â”œâ”€â”€ portal/                 # Customer self-service views
+â”œâ”€â”€ reports/                # Executive analytics, services, aggregation queries
+â”‚   â”œâ”€â”€ services.py         # MRR calculation, receivables aging, chart data
+â”‚   â”œâ”€â”€ views.py            # Dashboard and CSV export summary
+â”‚   â””â”€â”€ tests.py            # Financial and metric mathematical verification tests
+â”œâ”€â”€ subscriptions/          # Contract lifecycle, quotation-to-subscription workflows
+â”œâ”€â”€ templates/              # Bootstrap 5 responsive templates
+â”‚   â”œâ”€â”€ accounts/           # Auth and staff administration
+â”‚   â”œâ”€â”€ base.html           # Core layout with navigation and alerts
+â”‚   â”œâ”€â”€ billing/            # Billing run preview, execution, and review queue
+â”‚   â”œâ”€â”€ payments/           # Payment settlement and aging screens
+â”‚   â”œâ”€â”€ reports/            # Executive dashboard and summary table
+â”‚   â””â”€â”€ subscriptions/      # Subscription registry and detail pages
+â”œâ”€â”€ perf_check.py           # Latency SLO benchmark tester
+â”œâ”€â”€ seed.py                 # Deterministic high-volume dataset generator
+â”œâ”€â”€ manage.py
+â””â”€â”€ requirements.txt
 ```
 
 ---
 
-## ⚡ Performance & Scale
+## âš¡ Performance & Scale
 
 SubSentry is engineered to adhere to strict corporate Service Level Objectives (SLOs):
 - **Target Response Time:** `< 2.0 seconds` for all screens with 5,000+ active subscriptions.
@@ -147,7 +147,7 @@ SubSentry is engineered to adhere to strict corporate Service Level Objectives (
 
 ---
 
-## 📸 Interface Preview
+## ðŸ“¸ Interface Preview
 
 *(Screenshots will be captured during live demonstration)*
 - **Executive Revenue Control Tower:** Real-time KPI cards for MRR, Collected Receivables, Aging Overdue, and Revenue at Risk.
@@ -156,17 +156,17 @@ SubSentry is engineered to adhere to strict corporate Service Level Objectives (
 
 ---
 
-## 🛑 Out of Scope (By Design)
+## ðŸ›‘ Out of Scope (By Design)
 
 To maintain focus on core billing integrity and enterprise scale during the hackathon, the following items are purposefully out of scope:
 - Live external payment gateway integration (Stripe, Razorpay API calls).
 - Binary PDF generation (HTML/CSS browser print-ready invoices used instead).
 - Mid-cycle proration calculation algorithms.
-- Multi-currency conversions (all values standardized in INR - ₹).
+- Multi-currency conversions (all values standardized in INR - â‚¹).
 
 ---
 
-## 👥 The Team
+## ðŸ‘¥ The Team
 
 | Role | Owner | Focus Area |
 | :--- | :--- | :--- |
@@ -176,7 +176,7 @@ To maintain focus on core billing integrity and enterprise scale during the hack
 | **P4** | Team Aurevia | Payment Settlement, Financial Analytics Dashboard, Seed Engine, Pitch & Benchmarks |
 
 ## Live demo
-https://YOUR-APP.onrender.com
+https://teamaurevia.onrender.com
 
 Logins: admin@subsentry.test / Admin@12345, staff@subsentry.test / Staff@12345, demo@subsentry.test / Demo@12345
 
