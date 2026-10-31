@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% load subsentry_extras %}
+
+{% block title %}My Subscriptions - SubSentry Customer Portal{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <h1 class="h3 fw-bold text-dark mb-1">My Subscriptions</h1>
+            <p class="text-muted mb-0 small">Overview of all your active, paused, and past subscriptions</p>
+        </div>
+    </div>
+
+    {% if page_obj %}
+    <div class="card shadow-sm border-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th scope="col" class="ps-3">Subscription</th>
+                        <th scope="col">Plan</th>
+                        <th scope="col">Status</th>
+                        <th scope="col">Start Date</th>
+                        <th scope="col">Expiry Date</th>
+                        <th scope="col">Next Invoice</th>
+                        <th scope="col" class="text-end pe-3">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sub in page_obj %}
+                    <tr>
+                        <td class="ps-3">
+                            <a href="{% url 'portal:subscription_detail' sub.id %}" class="fw-semibold text-primary text-decoration-none">
+                                {{ sub.number|default:sub.id }}
+                            </a>
+                        </td>
+                        <td>
+                            <span class="fw-medium text-dark">{{ sub.plan.name }}</span>
+                            <span class="text-muted small">({{ sub.plan.get_billing_period_display }})</span>
+                        </td>
+                        <td>
+                            {% include 'includes/status_badge.html' with status=sub.status %}
+                        </td>
+                        <td>{{ sub.start_date|date:"d M Y" }}</td>
+                        <td>
+                            {% if sub.expiry_date %}
+                                {{ sub.expiry_date|date:"d M Y" }}
+                            {% else %}
+                                <span class="text-muted">Ongoing</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if sub.next_invoice_date %}
+                                <span class="text-dark">{{ sub.next_invoice_date|date:"d M Y" }}</span>
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end pe-3 fw-bold text-dark">
+                            {{ sub.total|inr }}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="p-0">
+                            {% include 'includes/empty_state.html' with icon="bi-collection" title="No Subscriptions Yet" message="You do not have any active or past subscriptions." %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {% include 'includes/pagination.html' with page_obj=page_obj %}
+
+    {% else %}
+        {% include 'includes/empty_state.html' with icon="bi-collection" title="No Subscriptions" message="You do not have any subscriptions registered with us." %}
+    {% endif %}
+</div>
+{% endblock %}

@@ -26,6 +26,15 @@ def inr(value):
     return f"₹{formatted}"
 
 
+@register.filter(name='abs')
+def abs_val(value):
+    """Returns the absolute value of a number/Decimal."""
+    try:
+        return abs(Decimal(str(value)))
+    except (InvalidOperation, TypeError, ValueError):
+        return value
+
+
 @register.filter(name='status_class')
 def status_class(status):
     """

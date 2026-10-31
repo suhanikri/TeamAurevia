@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% load subsentry_extras %}
+
+{% block title %}My Payments - SubSentry Customer Portal{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <h1 class="h3 fw-bold text-dark mb-1">My Payments</h1>
+            <p class="text-muted mb-0 small">A record of all payments made towards your subscriptions and invoices</p>
+        </div>
+    </div>
+
+    {% if page_obj %}
+    <div class="card shadow-sm border-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th scope="col" class="ps-3">Payment Date</th>
+                        <th scope="col">Invoice Number</th>
+                        <th scope="col">Payment Method</th>
+                        <th scope="col">Note</th>
+                        <th scope="col" class="text-end pe-3">Amount Paid</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for pay in page_obj %}
+                    <tr>
+                        <td class="ps-3 fw-semibold text-dark">{{ pay.payment_date|date:"d M Y" }}</td>
+                        <td>
+                            <a href="{% url 'portal:invoice_detail' pay.invoice.id %}" class="fw-semibold text-primary text-decoration-none">
+                                {{ pay.invoice.number|default:pay.invoice.id }}
+                            </a>
+                        </td>
+                        <td>
+                            <span class="badge bg-light text-dark border">
+                                {{ pay.get_method_display }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if pay.note %}
+                                <span class="text-muted small">{{ pay.note }}</span>
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end pe-3 fw-bold text-success">
+                            {{ pay.amount|inr }}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="p-0">
+                            {% include 'includes/empty_state.html' with icon="bi-wallet2" title="No Payments Found" message="You have not made any payments yet." %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {% include 'includes/pagination.html' with page_obj=page_obj %}
+
+    {% else %}
+        {% include 'includes/empty_state.html' with icon="bi-wallet2" title="No Payments" message="You have not made any payments yet." %}
+    {% endif %}
+</div>
+{% endblock %}
