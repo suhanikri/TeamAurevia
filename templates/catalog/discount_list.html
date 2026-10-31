@@ -88,7 +88,7 @@
                                     </span>
                                 {% else %}
                                     <span class="badge bg-success-subtle text-success border border-success-subtle fs-6">
-                                        ${{ discount.value|floatformat:2 }} OFF
+                                        ₹{{ discount.value|floatformat:2 }} OFF
                                     </span>
                                 {% endif %}
                             </td>
@@ -106,7 +106,7 @@
                             <td>
                                 <div class="small">
                                     {% if discount.min_purchase > 0 %}
-                                        <div>Min ${{ discount.min_purchase|floatformat:2 }}</div>
+                                        <div>Min ₹{{ discount.min_purchase|floatformat:2 }}</div>
                                     {% endif %}
                                     {% if discount.min_quantity > 0 %}
                                         <div class="text-muted">Min {{ discount.min_quantity }} units</div>

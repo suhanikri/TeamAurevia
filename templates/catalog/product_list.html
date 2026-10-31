@@ -86,8 +86,8 @@
                             <td>
                                 <span class="badge bg-light text-dark border">{{ product.get_product_type_display }}</span>
                             </td>
-                            <td class="text-end fw-bold text-dark">${{ product.sales_price|floatformat:2 }}</td>
-                            <td class="text-end text-muted">${{ product.cost_price|floatformat:2 }}</td>
+                            <td class="text-end fw-bold text-dark">₹{{ product.sales_price|floatformat:2 }}</td>
+                            <td class="text-end text-muted">₹{{ product.cost_price|floatformat:2 }}</td>
                             <td>
                                 {% if product.tax %}
                                     <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle">

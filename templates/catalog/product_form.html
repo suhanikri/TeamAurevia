@@ -61,14 +61,14 @@
 
                     <div class="row g-3 mb-3">
                         <div class="col-12 col-md-6">
-                            <label for="{{ form.sales_price.id_for_label }}" class="form-label fw-semibold">Sales Price ($) <span class="text-danger">*</span></label>
+                            <label for="{{ form.sales_price.id_for_label }}" class="form-label fw-semibold">Sales Price (₹) <span class="text-danger">*</span></label>
                             {{ form.sales_price }}
                             {% if form.sales_price.errors %}
                                 <div class="text-danger small mt-1">{{ form.sales_price.errors.0 }}</div>
                             {% endif %}
                         </div>
                         <div class="col-12 col-md-6">
-                            <label for="{{ form.cost_price.id_for_label }}" class="form-label fw-semibold">Cost Price ($) <span class="text-danger">*</span></label>
+                            <label for="{{ form.cost_price.id_for_label }}" class="form-label fw-semibold">Cost Price (₹) <span class="text-danger">*</span></label>
                             {{ form.cost_price }}
                             {% if form.cost_price.errors %}
                                 <div class="text-danger small mt-1">{{ form.cost_price.errors.0 }}</div>

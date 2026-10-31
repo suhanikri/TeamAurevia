@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+
+{% block title %}Plan Revenue Summary - SubSentry{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-3">
+    <!-- Header & Action Bar -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+        <div>
+            <h1 class="h3 fw-bold mb-1">Plan Revenue Summary</h1>
+            <p class="text-muted small mb-0">Financial breakdown aggregated by subscription billing plan</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'reports:dashboard' %}" class="btn btn-outline-secondary btn-sm fw-semibold">
+                &larr; Back to Dashboard
+            </a>
+            <a href="{% url 'reports:summary' %}?export=csv" class="btn btn-success btn-sm fw-semibold">
+                <i class="bi bi-file-earmark-spreadsheet me-1"></i> Export CSV
+            </a>
+        </div>
+    </div>
+
+    <!-- Summary Table Card -->
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-3">Plan Name</th>
+                            <th>Billing Period</th>
+                            <th class="text-center">Active Subscriptions</th>
+                            <th class="text-end">MRR Contribution</th>
+                            <th class="text-end">Total Invoiced</th>
+                            <th class="text-end">Total Collected</th>
+                            <th class="text-end pe-3">Outstanding</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in summary_data %}
+                        <tr>
+                            <td class="ps-3 fw-bold text-dark">
+                                {{ row.plan.name }}
+                            </td>
+                            <td>
+                                <span class="badge bg-light text-dark border">
+                                    {{ row.plan.get_billing_period_display }}
+                                </span>
+                            </td>
+                            <td class="text-center fw-semibold">
+                                {{ row.active_count }}
+                            </td>
+                            <td class="text-end fw-bold text-primary">
+                                ₹{{ row.mrr }}
+                            </td>
+                            <td class="text-end">
+                                ₹{{ row.invoiced }}
+                            </td>
+                            <td class="text-end text-success fw-semibold">
+                                ₹{{ row.collected }}
+                            </td>
+                            <td class="text-end pe-3 fw-bold {% if row.outstanding > 0 %}text-danger{% else %}text-muted{% endif %}">
+                                ₹{{ row.outstanding }}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center py-4 text-muted">
+                                No plans available.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

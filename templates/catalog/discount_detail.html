@@ -22,7 +22,7 @@
             {% if discount.discount_type == 'percent' %}
                 <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle fs-6">{{ discount.value }}% OFF</span>
             {% else %}
-                <span class="badge bg-success-subtle text-success border border-success-subtle fs-6">${{ discount.value|floatformat:2 }} OFF</span>
+                <span class="badge bg-success-subtle text-success border border-success-subtle fs-6">₹{{ discount.value|floatformat:2 }} OFF</span>
             {% endif %}
         </div>
     </div>
@@ -57,7 +57,7 @@
                     <div class="col-6">
                         <span class="text-muted small d-block">Benefit Value</span>
                         <span class="fs-5 fw-bold text-dark">
-                            {% if discount.discount_type == 'percent' %}{{ discount.value }}%{% else %}${{ discount.value|floatformat:2 }}{% endif %}
+                            {% if discount.discount_type == 'percent' %}{{ discount.value }}%{% else %}₹{{ discount.value|floatformat:2 }}{% endif %}
                         </span>
                     </div>
                 </div>
@@ -65,7 +65,7 @@
                 <div class="row mb-3">
                     <div class="col-6">
                         <span class="text-muted small d-block">Minimum Purchase</span>
-                        <span class="fw-medium">${{ discount.min_purchase|floatformat:2 }}</span>
+                        <span class="fw-medium">₹{{ discount.min_purchase|floatformat:2 }}</span>
                     </div>
                     <div class="col-6">
                         <span class="text-muted small d-block">Minimum Quantity</span>
@@ -130,7 +130,7 @@
                                     <a href="{% url 'catalog:product_detail' product.pk %}" class="text-decoration-none fw-medium text-dark">
                                         {{ product.name }}
                                     </a>
-                                    <span class="badge bg-light text-muted border">${{ product.sales_price|floatformat:2 }}</span>
+                                    <span class="badge bg-light text-muted border">₹{{ product.sales_price|floatformat:2 }}</span>
                                 </li>
                             {% empty %}
                                 <li class="list-group-item text-danger small">

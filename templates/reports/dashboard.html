@@ -1,11 +1,368 @@
 {% extends 'base.html' %}
 
-{% block title %}Dashboard - SubSentry{% endblock %}
+{% block title %}Finance Dashboard - SubSentry{% endblock %}
 
 {% block content %}
-<div class="container py-4">
-    <h1 class="h3 mb-3">Dashboard</h1>
-    <p class="text-muted">Dashboard coming soon</p>
+<div class="container-fluid py-3">
+    <!-- Header & Action Toolbar -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+        <div>
+            <h1 class="h3 fw-bold mb-1">Subscription Revenue Control Tower</h1>
+            <p class="text-muted small mb-0">Real-time MRR, aging receivables, and billing integrity analytics</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'reports:summary' %}" class="btn btn-outline-primary btn-sm fw-semibold">
+                <i class="bi bi-table me-1"></i> Plan Revenue Summary
+            </a>
+            <a href="{% url 'payments:outstanding' %}" class="btn btn-outline-secondary btn-sm fw-semibold">
+                <i class="bi bi-cash-stack me-1"></i> Paid vs Outstanding
+            </a>
+            <a href="/billing/preview/" class="btn btn-primary btn-sm fw-semibold">
+                <i class="bi bi-lightning-charge-fill me-1"></i> Billing Run
+            </a>
+        </div>
+    </div>
+
+    <!-- Review Queue Alert Banner -->
+    {% if unresolved_flags_count > 0 %}
+    <div class="alert alert-warning border-warning d-flex justify-content-between align-items-center mb-4 shadow-sm" role="alert">
+        <div>
+            <i class="bi bi-shield-exclamation text-warning-emphasis me-2 fs-5"></i>
+            <strong>Review Queue Notice:</strong> There are <strong>{{ unresolved_flags_count }}</strong> subscriptions with unresolved billing integrity flags.
+        </div>
+        <a href="/billing/review/" class="btn btn-warning btn-sm fw-bold">Open Review Queue &rarr;</a>
+    </div>
+    {% endif %}
+
+    <!-- Filter Bar -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body py-2">
+            <form method="get" class="row g-2 align-items-center">
+                <div class="col-md-3">
+                    <select name="plan" class="form-select form-select-sm">
+                        <option value="">All Plans</option>
+                        {% for p in plans %}
+                            <option value="{{ p.id }}" {% if selected_plan == p.id %}selected{% endif %}>{{ p.name }} ({{ p.get_billing_period_display }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select name="status" class="form-select form-select-sm">
+                        <option value="">All Subscriptions</option>
+                        {% for val, label in status_choices %}
+                            <option value="{{ val }}" {% if selected_status == val %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <input type="date" name="start_date" value="{{ selected_start_date }}" class="form-control form-control-sm" placeholder="From Date">
+                </div>
+                <div class="col-md-2">
+                    <input type="date" name="end_date" value="{{ selected_end_date }}" class="form-control form-control-sm" placeholder="To Date">
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-dark btn-sm">Filter</button>
+                    {% if selected_plan or selected_status or selected_start_date or selected_end_date %}
+                        <a href="{% url 'reports:dashboard' %}" class="btn btn-link btn-sm text-decoration-none">Reset</a>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 6 Executive KPI Cards -->
+    <div class="row g-3 mb-4">
+        <!-- 1. Active Subscriptions -->
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="card shadow-sm border-0 border-start border-primary border-4 h-100">
+                <div class="card-body p-3">
+                    <span class="text-muted small fw-semibold d-block">Active Subscriptions</span>
+                    <span class="fs-4 fw-bold text-dark">{{ active_subs_count }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. MRR -->
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="card shadow-sm border-0 border-start border-info border-4 h-100">
+                <div class="card-body p-3">
+                    <span class="text-muted small fw-semibold d-block">MRR (Normalized)</span>
+                    <span class="fs-4 fw-bold text-dark">₹{{ total_mrr }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Revenue Collected -->
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="card shadow-sm border-0 border-start border-success border-4 h-100">
+                <div class="card-body p-3">
+                    <span class="text-muted small fw-semibold d-block">Collected Revenue</span>
+                    <span class="fs-4 fw-bold text-success">₹{{ revenue_collected }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. Outstanding -->
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="card shadow-sm border-0 border-start border-secondary border-4 h-100">
+                <div class="card-body p-3">
+                    <span class="text-muted small fw-semibold d-block">Outstanding</span>
+                    <span class="fs-4 fw-bold text-dark">₹{{ total_outstanding }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. Overdue -->
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="card shadow-sm border-0 border-start border-warning border-4 h-100">
+                <div class="card-body p-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-muted small fw-semibold d-block">Overdue</span>
+                        <span class="badge bg-warning text-dark">{{ count_overdue }}</span>
+                    </div>
+                    <span class="fs-4 fw-bold text-warning-emphasis">₹{{ total_overdue }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 6. Revenue at Risk (USP Hero Metric) -->
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="card shadow-sm border-0 border-start border-danger border-4 bg-danger-subtle h-100" title="Overdue receivables + subtotal of active subscriptions flagged in the Review Queue.">
+                <div class="card-body p-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-danger-emphasis small fw-bold d-block">Revenue at Risk</span>
+                        <i class="bi bi-info-circle text-danger" data-bs-toggle="tooltip" title="Overdue invoice balance + active contracts with unresolved integrity flags."></i>
+                    </div>
+                    <span class="fs-4 fw-bold text-danger">₹{{ revenue_at_risk }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row g-3 mb-4">
+        <!-- Revenue Collected Trend -->
+        <div class="col-lg-6">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-white py-3">
+                    <h2 class="h6 fw-bold mb-0">Revenue Collected (Last 6 Months)</h2>
+                </div>
+                <div class="card-body">
+                    <canvas id="revenueTrendChart" style="max-height: 250px;"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Invoice Status Breakdown -->
+        <div class="col-md-6 col-lg-3">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-white py-3">
+                    <h2 class="h6 fw-bold mb-0">Invoices by Status</h2>
+                </div>
+                <div class="card-body d-flex align-items-center justify-content-center">
+                    <canvas id="invoiceStatusChart" style="max-height: 250px;"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- MRR by Period -->
+        <div class="col-md-6 col-lg-3">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-white py-3">
+                    <h2 class="h6 fw-bold mb-0">MRR by Plan Period</h2>
+                </div>
+                <div class="card-body">
+                    <canvas id="mrrPeriodChart" style="max-height: 250px;"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tables Row: Top Overdue & Upcoming Renewals -->
+    <div class="row g-3">
+        <!-- Top Overdue Invoices -->
+        <div class="col-lg-6">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                    <h2 class="h6 fw-bold mb-0 text-danger">
+                        <i class="bi bi-clock-history me-1"></i> Overdue Invoices (Top 10)
+                    </h2>
+                    <a href="{% url 'payments:outstanding' %}?tab=overdue" class="btn btn-outline-danger btn-sm py-0 px-2 small">View All</a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0 small">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="ps-3">Invoice</th>
+                                    <th>Customer</th>
+                                    <th>Due Date</th>
+                                    <th>Aging</th>
+                                    <th class="text-end">Balance</th>
+                                    <th class="text-center">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in top_overdue_list %}
+                                <tr>
+                                    <td class="ps-3 fw-bold">{{ item.invoice.number }}</td>
+                                    <td>{{ item.invoice.customer.email }}</td>
+                                    <td>{{ item.invoice.due_date|date:"M d, Y" }}</td>
+                                    <td><span class="badge bg-danger">{{ item.days_overdue }}d overdue</span></td>
+                                    <td class="text-end fw-bold text-danger">₹{{ item.balance }}</td>
+                                    <td class="text-center">
+                                        <a href="{% url 'payments:record' item.invoice.pk %}" class="btn btn-outline-success btn-sm py-0 px-2">Pay</a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center py-4 text-muted">
+                                        <i class="bi bi-check-circle text-success me-1"></i> Excellent! No overdue invoices.
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Upcoming Contract Renewals -->
+        <div class="col-lg-6">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                    <h2 class="h6 fw-bold mb-0">
+                        <i class="bi bi-calendar-event me-1"></i> Upcoming Billing Renewals (Next 30 Days)
+                    </h2>
+                    <a href="{% url 'subscriptions:list' %}?status=active" class="btn btn-outline-secondary btn-sm py-0 px-2 small">All Active</a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0 small">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="ps-3">Subscription</th>
+                                    <th>Customer</th>
+                                    <th>Plan</th>
+                                    <th>Next Billing</th>
+                                    <th class="text-end pe-3">Period Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for sub in upcoming_renewals %}
+                                <tr>
+                                    <td class="ps-3 fw-bold">
+                                        <a href="{% url 'subscriptions:detail' sub.pk %}" class="text-decoration-none">
+                                            {{ sub.number }}
+                                        </a>
+                                    </td>
+                                    <td>{{ sub.customer.email }}</td>
+                                    <td>{{ sub.plan.name }}</td>
+                                    <td>{{ sub.next_invoice_date|date:"M d, Y" }}</td>
+                                    <td class="text-end pe-3 fw-bold">₹{{ sub.total }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center py-4 text-muted">
+                                        No active subscriptions due for billing in the next 30 days.
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
+
+<!-- Chart.js JSON Payloads -->
+{{ revenue_chart_data|json_script:"revenue-chart-data" }}
+{{ status_chart_data|json_script:"status-chart-data" }}
+{{ mrr_chart_data|json_script:"mrr-chart-data" }}
 {% endblock %}
 
+{% block extra_js %}
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // 1. Monthly Revenue Trend Chart
+        const revDataEl = document.getElementById('revenue-chart-data');
+        if (revDataEl) {
+            const revData = JSON.parse(revDataEl.textContent);
+            new Chart(document.getElementById('revenueTrendChart'), {
+                type: 'bar',
+                data: {
+                    labels: revData.labels,
+                    datasets: [{
+                        label: 'Revenue Collected (₹)',
+                        data: revData.values,
+                        backgroundColor: '#4f46e5',
+                        borderRadius: 6,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: '#f1f5f9' } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        // 2. Invoice Status Doughnut Chart
+        const statusDataEl = document.getElementById('status-chart-data');
+        if (statusDataEl) {
+            const statusData = JSON.parse(statusDataEl.textContent);
+            new Chart(document.getElementById('invoiceStatusChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: statusData.labels,
+                    datasets: [{
+                        data: statusData.values,
+                        backgroundColor: ['#10b981', '#4f46e5', '#94a3b8', '#334155'],
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom' } }
+                }
+            });
+        }
+
+        // 3. MRR by Billing Period Bar Chart
+        const mrrDataEl = document.getElementById('mrr-chart-data');
+        if (mrrDataEl) {
+            const mrrData = JSON.parse(mrrDataEl.textContent);
+            new Chart(document.getElementById('mrrPeriodChart'), {
+                type: 'bar',
+                data: {
+                    labels: mrrData.labels,
+                    datasets: [{
+                        label: 'MRR Contribution (₹)',
+                        data: mrrData.values,
+                        backgroundColor: '#3b82f6',
+                        borderRadius: 6,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: '#f1f5f9' } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

@@ -140,7 +140,7 @@ class Discount(models.Model):
     def __str__(self):
         if self.discount_type == self.TYPE_PERCENT:
             return f"{self.name} ({self.value}%)"
-        return f"{self.name} (${self.value})"
+        return f"{self.name} (₹{self.value})"
 
 
 class QuotationTemplate(models.Model):

@@ -89,7 +89,7 @@
                                     {{ plan.get_billing_period_display }}
                                 </span>
                             </td>
-                            <td class="text-end fw-bold text-dark">${{ plan.price|floatformat:2 }}</td>
+                            <td class="text-end fw-bold text-dark">₹{{ plan.price|floatformat:2 }}</td>
                             <td><span class="badge bg-light text-dark border">{{ plan.min_quantity }} unit{{ plan.min_quantity|pluralize }}</span></td>
                             <td>
                                 <div class="d-flex flex-wrap gap-1">

@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+
+{% block title %}Billing Run Result - SubSentry{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-3">
+    <!-- Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+        <div>
+            <h1 class="h3 fw-bold mb-1">Billing Run Execution Summary</h1>
+            <p class="text-muted small mb-0">Audit record for Batch #{{ run.id }} executed at {{ run.run_at|date:"M d, Y H:i" }}</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'billing_run:preview' %}" class="btn btn-outline-secondary btn-sm fw-semibold">
+                &larr; Back to Preview
+            </a>
+            <a href="{% url 'reports:dashboard' %}" class="btn btn-outline-primary btn-sm fw-semibold">
+                Control Tower
+            </a>
+            {% if run.flagged > 0 %}
+            <a href="{% url 'billing_run:review' %}" class="btn btn-warning btn-sm fw-bold">
+                Open Review Queue ({{ run.flagged }}) &rarr;
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- 4 Metrics Cards -->
+    <div class="row g-3 mb-4">
+        <!-- Generated -->
+        <div class="col-6 col-md-3">
+            <div class="card shadow-sm border-0 border-start border-success border-4 h-100">
+                <div class="card-body p-3">
+                    <span class="text-muted small fw-semibold d-block">Invoices Generated</span>
+                    <span class="fs-4 fw-bold text-success">{{ run.generated }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Invoiced Amount -->
+        <div class="col-6 col-md-3">
+            <div class="card shadow-sm border-0 border-start border-primary border-4 h-100">
+                <div class="card-body p-3">
+                    <span class="text-muted small fw-semibold d-block">Total Billed Receivables</span>
+                    <span class="fs-4 fw-bold text-primary">₹{{ run.total_due }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Flagged -->
+        <div class="col-6 col-md-3">
+            <div class="card shadow-sm border-0 border-start border-warning border-4 h-100">
+                <div class="card-body p-3">
+                    <span class="text-muted small fw-semibold d-block">Quarantined Flags</span>
+                    <span class="fs-4 fw-bold text-warning-emphasis">{{ run.flagged }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Skipped -->
+        <div class="col-6 col-md-3">
+            <div class="card shadow-sm border-0 border-start border-secondary border-4 h-100">
+                <div class="card-body p-3">
+                    <span class="text-muted small fw-semibold d-block">Duplicates Prevented</span>
+                    <span class="fs-4 fw-bold text-secondary">{{ run.skipped }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Generated Invoices Table -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-white py-3">
+            <h2 class="h6 fw-bold mb-0 text-success">
+                <i class="bi bi-file-earmark-check-fill me-1"></i> Generated Invoices ({{ generated_invoices|length }})
+            </h2>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                <table class="table table-hover align-middle mb-0 small">
+                    <thead class="table-light sticky-top">
+                        <tr>
+                            <th class="ps-3">Invoice #</th>
+                            <th>Customer</th>
+                            <th>Subscription</th>
+                            <th>Billing Window</th>
+                            <th>Due Date</th>
+                            <th class="text-end pe-3">Total Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for inv in generated_invoices %}
+                        <tr>
+                            <td class="ps-3 fw-bold text-primary">{{ inv.number }}</td>
+                            <td>{{ inv.customer.email }}</td>
+                            <td>{{ inv.subscription.number }}</td>
+                            <td>{{ inv.period_start|date:"M d" }} - {{ inv.period_end|date:"M d, Y" }}</td>
+                            <td>{{ inv.due_date|date:"M d, Y" }}</td>
+                            <td class="text-end pe-3 fw-bold text-dark">₹{{ inv.total }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center py-4 text-muted">No invoices were created in this run.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

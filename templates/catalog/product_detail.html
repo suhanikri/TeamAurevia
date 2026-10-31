@@ -47,11 +47,11 @@
             <div class="card-body">
                 <div class="mb-3">
                     <span class="text-muted small d-block">Base Sales Price</span>
-                    <span class="fs-4 fw-bold text-dark">${{ product.sales_price|floatformat:2 }}</span>
+                    <span class="fs-4 fw-bold text-dark">₹{{ product.sales_price|floatformat:2 }}</span>
                 </div>
                 <div class="mb-3">
                     <span class="text-muted small d-block">Cost Price</span>
-                    <span class="fs-5 text-muted">${{ product.cost_price|floatformat:2 }}</span>
+                    <span class="fs-5 text-muted">₹{{ product.cost_price|floatformat:2 }}</span>
                 </div>
                 <div class="mb-3">
                     <span class="text-muted small d-block">Applicable Tax</span>
@@ -102,7 +102,7 @@
                                 {{ variant_form.value }}
                             </div>
                             <div class="col-12 col-md-4">
-                                <label class="form-label small fw-semibold mb-1">Extra Price ($) <span class="text-danger">*</span></label>
+                                <label class="form-label small fw-semibold mb-1">Extra Price (₹) <span class="text-danger">*</span></label>
                                 <div class="input-group">
                                     {{ variant_form.extra_price }}
                                     <button type="submit" class="btn btn-primary" title="Add Variant">
@@ -136,10 +136,10 @@
                                 <tr>
                                     <td class="fw-semibold text-secondary">{{ variant.attribute }}</td>
                                     <td><span class="badge bg-light text-dark border">{{ variant.value }}</span></td>
-                                    <td class="text-end text-success fw-semibold">+${{ variant.extra_price|floatformat:2 }}</td>
+                                    <td class="text-end text-success fw-semibold">+₹{{ variant.extra_price|floatformat:2 }}</td>
                                     <td class="text-end fw-bold text-dark">
                                         <!-- Sales price + extra price -->
-                                        ${{ product.sales_price|add:variant.extra_price|floatformat:2 }}
+                                        ₹{{ product.sales_price|add:variant.extra_price|floatformat:2 }}
                                     </td>
                                     {% if user.role == 'admin' %}
                                         <td class="text-end">

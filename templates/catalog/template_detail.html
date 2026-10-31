@@ -50,7 +50,7 @@
                     <a href="{% url 'catalog:plan_detail' template.plan.pk %}" class="fw-bold text-decoration-none fs-5">
                         {{ template.plan.name }}
                     </a>
-                    <div class="text-muted small">${{ template.plan.price|floatformat:2 }} / {{ template.plan.get_billing_period_display }}</div>
+                    <div class="text-muted small">₹{{ template.plan.price|floatformat:2 }} / {{ template.plan.get_billing_period_display }}</div>
                 </div>
 
                 <div class="mb-3">
@@ -129,12 +129,12 @@
                                         <a href="{% url 'catalog:product_detail' line.product.pk %}" class="fw-semibold text-decoration-none text-dark">
                                             {{ line.product.name }}
                                         </a>
-                                        <div class="small text-muted">${{ line.product.sales_price|floatformat:2 }} base</div>
+                                        <div class="small text-muted">₹{{ line.product.sales_price|floatformat:2 }} base</div>
                                     </td>
                                     <td>
                                         {% if line.variant %}
                                             <span class="badge bg-secondary-subtle text-secondary border">
-                                                {{ line.variant.attribute }}: {{ line.variant.value }} (+${{ line.variant.extra_price|floatformat:2 }})
+                                                {{ line.variant.attribute }}: {{ line.variant.value }} (+₹{{ line.variant.extra_price|floatformat:2 }})
                                             </span>
                                         {% else %}
                                             <span class="text-muted small">Standard (No variant)</span>

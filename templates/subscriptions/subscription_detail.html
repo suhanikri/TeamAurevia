@@ -182,22 +182,22 @@
                             <td>
                                 {% if line.variant %}
                                     <span class="badge bg-light text-dark border">
-                                        {{ line.variant.attribute }}: {{ line.variant.value }} (+${{ line.variant.extra_price }})
+                                        {{ line.variant.attribute }}: {{ line.variant.value }} (+₹{{ line.variant.extra_price }})
                                     </span>
                                 {% else %}
                                     <span class="text-muted">—</span>
                                 {% endif %}
                             </td>
                             <td class="text-center">{{ line.quantity }}</td>
-                            <td class="text-end">${{ line.unit_price }}</td>
+                            <td class="text-end">₹{{ line.unit_price }}</td>
                             <td class="text-end">
                                 {% if line.tax %}
-                                    {{ line.tax.name }} ({{ line.tax.rate }}%): ${{ line.tax_amount }}
+                                    {{ line.tax.name }} ({{ line.tax.rate }}%): ₹{{ line.tax_amount }}
                                 {% else %}
                                     <span class="text-muted">No Tax</span>
                                 {% endif %}
                             </td>
-                            <td class="text-end pe-3 fw-bold">${{ line.amount }}</td>
+                            <td class="text-end pe-3 fw-bold">₹{{ line.amount }}</td>
                         </tr>
                         {% empty %}
                         <tr>
@@ -215,15 +215,15 @@
                 <div class="col-md-5 col-lg-4">
                     <div class="d-flex justify-content-between mb-1 small">
                         <span class="text-muted">Subtotal:</span>
-                        <span class="fw-semibold">${{ subtotal }}</span>
+                        <span class="fw-semibold">₹{{ subtotal }}</span>
                     </div>
                     <div class="d-flex justify-content-between mb-2 small">
                         <span class="text-muted">Taxes:</span>
-                        <span class="fw-semibold">${{ tax_total }}</span>
+                        <span class="fw-semibold">₹{{ tax_total }}</span>
                     </div>
                     <div class="d-flex justify-content-between border-top pt-2">
                         <span class="fw-bold">Total (per billing period):</span>
-                        <span class="fw-bold fs-5 text-primary">${{ total }}</span>
+                        <span class="fw-bold fs-5 text-primary">₹{{ total }}</span>
                     </div>
                 </div>
             </div>

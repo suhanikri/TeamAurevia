@@ -1,0 +1,142 @@
+{% extends 'base.html' %}
+
+{% block title %}Payments History - SubSentry{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Top Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+        <div>
+            <h1 class="h3 fw-bold mb-1">Payment Transactions</h1>
+            <p class="text-muted small mb-0">Audit trail of all recorded subscription payments</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'payments:outstanding' %}" class="btn btn-outline-primary btn-sm fw-semibold">
+                Paid vs Outstanding Overview &rarr;
+            </a>
+        </div>
+    </div>
+
+    <!-- Total Collected Banner -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 border-start border-success border-4">
+                <div class="card-body p-3">
+                    <span class="text-muted small fw-semibold d-block">Total Collected (Filtered Set)</span>
+                    <span class="fs-4 fw-bold text-success">₹{{ total_collected }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body py-3">
+            <form method="get" class="row g-2 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label small fw-semibold text-muted mb-1">Search</label>
+                    <input type="text" name="q" value="{{ query }}" class="form-control form-control-sm" placeholder="Invoice #, customer email, note...">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small fw-semibold text-muted mb-1">Method</label>
+                    <select name="method" class="form-select form-select-sm">
+                        <option value="">All Methods</option>
+                        {% for val, label in method_choices %}
+                            <option value="{{ val }}" {% if selected_method == val %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small fw-semibold text-muted mb-1">From Date</label>
+                    <input type="date" name="start_date" value="{{ start_date }}" class="form-control form-control-sm">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small fw-semibold text-muted mb-1">To Date</label>
+                    <input type="date" name="end_date" value="{{ end_date }}" class="form-control form-control-sm">
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-dark btn-sm">Filter</button>
+                    {% if query or selected_method or start_date or end_date %}
+                        <a href="{% url 'payments:list' %}" class="btn btn-link btn-sm text-decoration-none">Clear</a>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Payments Table -->
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light small">
+                        <tr>
+                            <th class="ps-3">ID</th>
+                            <th>Invoice</th>
+                            <th>Customer</th>
+                            <th>Method</th>
+                            <th class="text-end">Amount</th>
+                            <th>Date</th>
+                            <th>Recorded By</th>
+                            <th>Note</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for payment in page_obj %}
+                        <tr>
+                            <td class="ps-3 text-muted small">#{{ payment.id }}</td>
+                            <td class="fw-bold">
+                                <a href="{% url 'payments:record' payment.invoice.pk %}" class="text-decoration-none">
+                                    {{ payment.invoice.number }}
+                                </a>
+                            </td>
+                            <td>{{ payment.invoice.customer.email }}</td>
+                            <td>
+                                <span class="badge bg-light text-dark border">
+                                    {{ payment.get_method_display }}
+                                </span>
+                            </td>
+                            <td class="text-end fw-bold text-success">₹{{ payment.amount }}</td>
+                            <td class="small">{{ payment.payment_date|date:"M d, Y" }}</td>
+                            <td class="small text-muted">{{ payment.recorded_by.email|default:"System" }}</td>
+                            <td class="small text-muted">{{ payment.note|default:"—" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center py-5 text-muted">
+                                No payments recorded matching the filter criteria.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+        <div class="card-footer bg-white border-0 py-3 d-flex justify-content-between align-items-center">
+            <span class="small text-muted">
+                Showing {{ page_obj.start_index }} to {{ page_obj.end_index }} of {{ page_obj.paginator.count }} payments
+            </span>
+            <ul class="pagination pagination-sm mb-0">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if selected_method %}&method={{ selected_method }}{% endif %}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}">Previous</a>
+                    </li>
+                {% endif %}
+                <li class="page-item active">
+                    <span class="page-link">{{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                </li>
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if selected_method %}&method={{ selected_method }}{% endif %}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}">Next</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+

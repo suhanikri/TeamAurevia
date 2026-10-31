@@ -91,7 +91,7 @@
                             </td>
                             <td class="small">{{ sub.start_date|date:"M d, Y" }}</td>
                             <td class="small">{{ sub.next_invoice_date|date:"M d, Y"|default:"—" }}</td>
-                            <td class="text-end pe-3 fw-semibold">${{ sub.total }}</td>
+                            <td class="text-end pe-3 fw-semibold">₹{{ sub.total }}</td>
                             <td class="text-center">
                                 <a href="{% url 'subscriptions:detail' sub.pk %}" class="btn btn-outline-primary btn-sm py-0 px-2">
                                     View
