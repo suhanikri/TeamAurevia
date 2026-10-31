@@ -1,4 +1,4 @@
-from django.contrib.auth import get_user_model
+﻿from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.test import TestCase, Client, override_settings
 from django.urls import reverse
@@ -65,7 +65,7 @@ class UserSignupTests(TestCase):
         self.assertEqual(user.role, User.ROLE_CUSTOMER)
         self.assertTrue(user.is_customer_role)
         # Should redirect customer to /portal/
-        self.assertRedirects(response, '/portal/', target_status_code=404)
+        self.assertRedirects(response, '/portal/')
 
     def test_duplicate_email_rejected_case_insensitive(self):
         User.objects.create_user(email='existing@example.com', password='ValidPassword123!')

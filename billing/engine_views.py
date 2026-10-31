@@ -40,14 +40,14 @@ def billing_home(request):
 
 
 @staff_or_admin
-@require_POST
 def billing_preview(request):
     """
     Executes preview_billing for the specified date (defaults to today).
     Displays summary cards (ready, skipped, flagged) and details tables.
+    Supports both GET and POST.
     """
     engine = get_billing_engine()
-    date_str = request.POST.get('target_date', '').strip()
+    date_str = (request.POST.get('target_date') or request.GET.get('target_date') or '').strip()
     if date_str:
         try:
             target_date = datetime.strptime(date_str, '%Y-%m-%d').date()

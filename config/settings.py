@@ -157,3 +157,13 @@ TIME_ZONE = 'Asia/Kolkata'
 
 
 INSTALLED_APPS += ['portal']
+
+# ---- Deployment (Render) ----
+import os
+SECRET_KEY = os.environ.get('SECRET_KEY', SECRET_KEY)
+DEBUG = os.environ.get('DJANGO_DEBUG', str(DEBUG)) == 'True'
+ALLOWED_HOSTS = ['.onrender.com', 'localhost', '127.0.0.1']
+CSRF_TRUSTED_ORIGINS = ['https://*.onrender.com']
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
