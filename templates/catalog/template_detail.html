@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+
+{% block title %}{{ template.name }} | Quotation Template Detail{% endblock %}
+
+{% block content %}
+<div class="page-header mb-3">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-1 small">
+                <li class="breadcrumb-item"><a href="{% url 'catalog:dashboard' %}" class="text-decoration-none">Catalog</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'catalog:template_list' %}" class="text-decoration-none">Templates</a></li>
+                <li class="breadcrumb-item active" aria-current="page">{{ template.name }}</li>
+            </ol>
+        </nav>
+        <div class="d-flex align-items-center gap-2">
+            <h1>{{ template.name }}</h1>
+            {% if template.is_active %}
+                <span class="badge bg-success-subtle text-success border border-success-subtle"><i class="bi bi-check-circle me-1"></i>Active</span>
+            {% else %}
+                <span class="badge bg-danger-subtle text-danger border border-danger-subtle"><i class="bi bi-slash-circle me-1"></i>Inactive</span>
+            {% endif %}
+            <span class="badge bg-primary-subtle text-primary border border-primary-subtle">{{ template.plan.name }} ({{ template.plan.get_billing_period_display }})</span>
+        </div>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{% url 'catalog:template_list' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>Back to Templates
+        </a>
+        {% if user.role == 'admin' %}
+            <a href="{% url 'catalog:template_update' template.pk %}" class="btn btn-primary">
+                <i class="bi bi-pencil me-1"></i>Edit Template
+            </a>
+            <a href="{% url 'catalog:template_delete' template.pk %}" class="btn btn-outline-danger">
+                <i class="bi bi-trash me-1"></i>Deactivate
+            </a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <!-- Template Information Card -->
+    <div class="col-12 col-lg-4">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header py-3">
+                <span class="fw-bold text-dark"><i class="bi bi-info-circle me-2 text-primary"></i>Template Overview</span>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <span class="text-muted small d-block">Default Subscription Plan</span>
+                    <a href="{% url 'catalog:plan_detail' template.plan.pk %}" class="fw-bold text-decoration-none fs-5">
+                        {{ template.plan.name }}
+                    </a>
+                    <div class="text-muted small">${{ template.plan.price|floatformat:2 }} / {{ template.plan.get_billing_period_display }}</div>
+                </div>
+
+                <div class="mb-3">
+                    <span class="text-muted small d-block">Quotation Validity</span>
+                    <span class="fw-semibold text-dark">{{ template.validity_days }} days from issue</span>
+                </div>
+
+                {% if template.notes %}
+                    <div class="mb-3">
+                        <span class="text-muted small d-block">Template Notes / Terms</span>
+                        <div class="p-2 bg-light rounded small text-secondary mt-1">{{ template.notes }}</div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Template Lines Card -->
+    <div class="col-12 col-lg-8">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                <span class="fw-bold text-dark">
+                    <i class="bi bi-list-check me-2 text-primary"></i>Included Products & Lines ({{ template.lines.count }})
+                </span>
+                {% if user.role == 'admin' %}
+                    <button class="btn btn-sm btn-outline-primary" data-bs-toggle="collapse" data-bs-target="#addLineCollapse" aria-expanded="false" aria-controls="addLineCollapse">
+                        <i class="bi bi-plus-lg me-1"></i>Add Product Line
+                    </button>
+                {% endif %}
+            </div>
+            <div class="card-body p-0">
+                {% if user.role == 'admin' %}
+                    <!-- Add Line Collapsible Form -->
+                    <div class="collapse p-3 bg-light border-bottom" id="addLineCollapse">
+                        <h6 class="fw-bold mb-2">Add Product to Template</h6>
+                        <form method="post" action="{% url 'catalog:template_line_add' template.pk %}" class="row g-2">
+                            {% csrf_token %}
+                            <div class="col-12 col-md-5">
+                                <label class="form-label small fw-semibold mb-1">Product <span class="text-danger">*</span></label>
+                                {{ line_form.product }}
+                            </div>
+                            <div class="col-12 col-md-4">
+                                <label class="form-label small fw-semibold mb-1">Variant (Optional)</label>
+                                {{ line_form.variant }}
+                            </div>
+                            <div class="col-12 col-md-3">
+                                <label class="form-label small fw-semibold mb-1">Quantity <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    {{ line_form.quantity }}
+                                    <button type="submit" class="btn btn-primary" title="Add Line">
+                                        <i class="bi bi-plus-lg"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                {% endif %}
+
+                <!-- Lines Table -->
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Product</th>
+                                <th>Variant</th>
+                                <th class="text-center">Quantity</th>
+                                {% if user.role == 'admin' %}
+                                    <th class="text-end">Action</th>
+                                {% endif %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for line in template.lines.all %}
+                                <tr>
+                                    <td>
+                                        <a href="{% url 'catalog:product_detail' line.product.pk %}" class="fw-semibold text-decoration-none text-dark">
+                                            {{ line.product.name }}
+                                        </a>
+                                        <div class="small text-muted">${{ line.product.sales_price|floatformat:2 }} base</div>
+                                    </td>
+                                    <td>
+                                        {% if line.variant %}
+                                            <span class="badge bg-secondary-subtle text-secondary border">
+                                                {{ line.variant.attribute }}: {{ line.variant.value }} (+${{ line.variant.extra_price|floatformat:2 }})
+                                            </span>
+                                        {% else %}
+                                            <span class="text-muted small">Standard (No variant)</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-light text-dark border px-3 py-1">{{ line.quantity }}</span>
+                                    </td>
+                                    {% if user.role == 'admin' %}
+                                        <td class="text-end">
+                                            <form method="post" action="{% url 'catalog:template_line_delete' template.pk line.pk %}" class="d-inline" onsubmit="return confirm('Remove {{ line.product.name }} from this template?');">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Remove line">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </form>
+                                        </td>
+                                    {% endif %}
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center py-4 text-muted">
+                                        <i class="bi bi-cart-x fs-3 d-block mb-2"></i>
+                                        <div>No product lines added to this quotation template yet.</div>
+                                        {% if user.role == 'admin' %}
+                                            <div class="small mt-1">Use the "Add Product Line" button above to add software, services, or addons.</div>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

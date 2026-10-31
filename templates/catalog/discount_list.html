@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+
+{% block title %}Discounts & Promotions{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-1 small">
+                <li class="breadcrumb-item"><a href="{% url 'catalog:dashboard' %}" class="text-decoration-none">Catalog</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Discounts</li>
+            </ol>
+        </nav>
+        <h1>Discounts & Promotions</h1>
+    </div>
+    {% if user.role == 'admin' %}
+        <a href="{% url 'catalog:discount_create' %}" class="btn btn-primary">
+            <i class="bi bi-plus-lg me-1"></i>Add New Discount
+        </a>
+    {% endif %}
+</div>
+
+<!-- Filters Bar -->
+<div class="card mb-4 border-0 shadow-sm">
+    <div class="card-body p-3">
+        <form method="get" class="row g-2 align-items-center">
+            <div class="col-12 col-md-4">
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-search"></i></span>
+                    <input type="text" name="q" value="{{ query }}" class="form-control border-start-0" placeholder="Search discount name...">
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <select name="type" class="form-select">
+                    <option value="">All Types</option>
+                    {% for key, val in type_choices %}
+                        <option value="{{ key }}" {% if discount_type == key %}selected{% endif %}>{{ val }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-6 col-md-3">
+                <select name="scope" class="form-select">
+                    <option value="">All Scopes</option>
+                    {% for key, val in scope_choices %}
+                        <option value="{{ key }}" {% if scope == key %}selected{% endif %}>{{ val }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-12 col-md-2 d-flex gap-2">
+                <button type="submit" class="btn btn-primary flex-grow-1">Filter</button>
+                {% if query or discount_type or scope or status != 'active' %}
+                    <a href="{% url 'catalog:discount_list' %}" class="btn btn-outline-secondary" title="Reset Filters"><i class="bi bi-x-lg"></i></a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Discounts Table -->
+<div class="card shadow-sm border-0">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Discount Name</th>
+                        <th>Type & Value</th>
+                        <th>Scope</th>
+                        <th>Min Purchase / Qty</th>
+                        <th>Validity Window</th>
+                        <th>Usage</th>
+                        <th>Status</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for discount in page_obj %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'catalog:discount_detail' discount.pk %}" class="fw-semibold text-decoration-none text-dark">
+                                    {{ discount.name }}
+                                </a>
+                            </td>
+                            <td>
+                                {% if discount.discount_type == 'percent' %}
+                                    <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle fs-6">
+                                        {{ discount.value }}% OFF
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle fs-6">
+                                        ${{ discount.value|floatformat:2 }} OFF
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if discount.scope == 'products' %}
+                                    <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle">
+                                        <i class="bi bi-box-seam me-1"></i>Specific Products ({{ discount.products.count }})
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-secondary-subtle text-secondary border">
+                                        <i class="bi bi-layers me-1"></i>Whole Subscription
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="small">
+                                    {% if discount.min_purchase > 0 %}
+                                        <div>Min ${{ discount.min_purchase|floatformat:2 }}</div>
+                                    {% endif %}
+                                    {% if discount.min_quantity > 0 %}
+                                        <div class="text-muted">Min {{ discount.min_quantity }} units</div>
+                                    {% endif %}
+                                    {% if discount.min_purchase == 0 and discount.min_quantity == 0 %}
+                                        <span class="text-muted">None</span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td>
+                                <div class="small">
+                                    {% if discount.start_date or discount.end_date %}
+                                        {{ discount.start_date|default:"Immediate"|date:"M d, Y" }} &rarr; {{ discount.end_date|default:"Open"|date:"M d, Y" }}
+                                    {% else %}
+                                        <span class="text-success">Always Valid</span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td>
+                                <div class="small">
+                                    <span class="fw-semibold">{{ discount.used_count }}</span>
+                                    <span class="text-muted">/ {{ discount.usage_limit|default:"&infin;" }}</span>
+                                </div>
+                            </td>
+                            <td>
+                                {% if discount.is_usable %}
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle"><i class="bi bi-check-circle me-1"></i>Usable</span>
+                                {% else %}
+                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle"><i class="bi bi-x-circle me-1"></i>Inactive / Exhausted</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{% url 'catalog:discount_detail' discount.pk %}" class="btn btn-outline-secondary" title="View Detail">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    {% if user.role == 'admin' %}
+                                        <a href="{% url 'catalog:discount_update' discount.pk %}" class="btn btn-outline-primary" title="Edit Discount">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <a href="{% url 'catalog:discount_delete' discount.pk %}" class="btn btn-outline-danger" title="Deactivate">
+                                            <i class="bi bi-trash"></i>
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center py-5">
+                                <div class="text-muted mb-3"><i class="bi bi-tag fs-1"></i></div>
+                                <h5 class="fw-semibold">No discounts configured</h5>
+                                <p class="text-muted small mb-3">Create promotional or product-specific discounts.</p>
+                                {% if user.role == 'admin' %}
+                                    <a href="{% url 'catalog:discount_create' %}" class="btn btn-sm btn-primary">
+                                        <i class="bi bi-plus-lg me-1"></i>Add Discount
+                                    </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+        <div class="card-footer bg-white border-0 py-3">
+            <nav aria-label="Discounts pagination">
+                <ul class="pagination pagination-sm justify-content-center mb-0">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}&q={{ query }}&type={{ discount_type }}&scope={{ scope }}">&laquo; Prev</a></li>
+                    {% else %}
+                        <li class="page-item disabled"><span class="page-link">&laquo; Prev</span></li>
+                    {% endif %}
+
+                    {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                            <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                            <li class="page-item"><a class="page-link" href="?page={{ num }}&q={{ query }}&type={{ discount_type }}&scope={{ scope }}">{{ num }}</a></li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if page_obj.has_next %}
+                        <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}&q={{ query }}&type={{ discount_type }}&scope={{ scope }}">Next &raquo;</a></li>
+                    {% else %}
+                        <li class="page-item disabled"><span class="page-link">Next &raquo;</span></li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

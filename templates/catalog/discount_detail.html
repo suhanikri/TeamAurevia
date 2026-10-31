@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+
+{% block title %}{{ discount.name }} | Discount Detail{% endblock %}
+
+{% block content %}
+<div class="page-header mb-3">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-1 small">
+                <li class="breadcrumb-item"><a href="{% url 'catalog:dashboard' %}" class="text-decoration-none">Catalog</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'catalog:discount_list' %}" class="text-decoration-none">Discounts</a></li>
+                <li class="breadcrumb-item active" aria-current="page">{{ discount.name }}</li>
+            </ol>
+        </nav>
+        <div class="d-flex align-items-center gap-2">
+            <h1>{{ discount.name }}</h1>
+            {% if discount.is_usable %}
+                <span class="badge bg-success-subtle text-success border border-success-subtle"><i class="bi bi-check-circle me-1"></i>Active & Usable</span>
+            {% else %}
+                <span class="badge bg-danger-subtle text-danger border border-danger-subtle"><i class="bi bi-x-circle me-1"></i>Inactive / Exhausted</span>
+            {% endif %}
+            {% if discount.discount_type == 'percent' %}
+                <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle fs-6">{{ discount.value }}% OFF</span>
+            {% else %}
+                <span class="badge bg-success-subtle text-success border border-success-subtle fs-6">${{ discount.value|floatformat:2 }} OFF</span>
+            {% endif %}
+        </div>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{% url 'catalog:discount_list' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>Back to Discounts
+        </a>
+        {% if user.role == 'admin' %}
+            <a href="{% url 'catalog:discount_update' discount.pk %}" class="btn btn-primary">
+                <i class="bi bi-pencil me-1"></i>Edit Discount
+            </a>
+            <a href="{% url 'catalog:discount_delete' discount.pk %}" class="btn btn-outline-danger">
+                <i class="bi bi-trash me-1"></i>Deactivate
+            </a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <!-- Left Column: Specs -->
+    <div class="col-12 col-lg-6">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header py-3">
+                <span class="fw-bold text-dark"><i class="bi bi-tag me-2 text-primary"></i>Discount Rules & Limits</span>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-6">
+                        <span class="text-muted small d-block">Type</span>
+                        <span class="fs-5 fw-semibold">{{ discount.get_discount_type_display }}</span>
+                    </div>
+                    <div class="col-6">
+                        <span class="text-muted small d-block">Benefit Value</span>
+                        <span class="fs-5 fw-bold text-dark">
+                            {% if discount.discount_type == 'percent' %}{{ discount.value }}%{% else %}${{ discount.value|floatformat:2 }}{% endif %}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-6">
+                        <span class="text-muted small d-block">Minimum Purchase</span>
+                        <span class="fw-medium">${{ discount.min_purchase|floatformat:2 }}</span>
+                    </div>
+                    <div class="col-6">
+                        <span class="text-muted small d-block">Minimum Quantity</span>
+                        <span class="fw-medium">{{ discount.min_quantity }} units</span>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <span class="text-muted small d-block">Validity Dates</span>
+                    <div class="mt-1">
+                        {% if discount.start_date or discount.end_date %}
+                            <span class="fw-medium">{{ discount.start_date|default:"Immediate"|date:"M d, Y" }} &rarr; {{ discount.end_date|default:"Ongoing"|date:"M d, Y" }}</span>
+                        {% else %}
+                            <span class="text-success fw-medium">No date restrictions (Ongoing)</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Usage Progress -->
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="text-muted small">Usage Counter (Read-Only)</span>
+                        <span class="small fw-bold">
+                            {{ discount.used_count }} / {% if discount.usage_limit %}{{ discount.usage_limit }}{% else %}&infin;{% endif %}
+                        </span>
+                    </div>
+                    {% if discount.usage_limit %}
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar {% if discount.used_count >= discount.usage_limit %}bg-danger{% else %}bg-primary{% endif %}"
+                                 role="progressbar"
+                                 style="width: {% widthratio discount.used_count discount.usage_limit 100 %}%;">
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="text-muted small">Unlimited redemptions allowed.</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column: Scope & Applicable Products -->
+    <div class="col-12 col-lg-6">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header py-3">
+                <span class="fw-bold text-dark"><i class="bi bi-bullseye me-2 text-primary"></i>Application Scope</span>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <span class="text-muted small d-block">Scope Target</span>
+                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle py-1 px-2 fs-6">
+                        {{ discount.get_scope_display }}
+                    </span>
+                </div>
+
+                {% if discount.scope == 'products' %}
+                    <div class="mb-3">
+                        <span class="text-muted small d-block mb-2">Restricted to Selected Products:</span>
+                        <ul class="list-group">
+                            {% for product in discount.products.all %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <a href="{% url 'catalog:product_detail' product.pk %}" class="text-decoration-none fw-medium text-dark">
+                                        {{ product.name }}
+                                    </a>
+                                    <span class="badge bg-light text-muted border">${{ product.sales_price|floatformat:2 }}</span>
+                                </li>
+                            {% empty %}
+                                <li class="list-group-item text-danger small">
+                                    <i class="bi bi-exclamation-triangle me-1"></i>Warning: No products selected for this product-scoped discount!
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                {% else %}
+                    <div class="p-3 bg-light rounded-3 text-secondary small">
+                        <i class="bi bi-info-circle me-1 text-primary"></i>
+                        This discount applies to the <strong>whole subscription subtotal</strong> whenever the customer's subscription links to this discount directly.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

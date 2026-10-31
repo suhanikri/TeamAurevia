@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+
+{% block title %}Taxes{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-1 small">
+                <li class="breadcrumb-item"><a href="{% url 'catalog:dashboard' %}" class="text-decoration-none">Catalog</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Taxes</li>
+            </ol>
+        </nav>
+        <h1>Tax Rates</h1>
+    </div>
+    {% if user.role == 'admin' %}
+        <a href="{% url 'catalog:tax_create' %}" class="btn btn-primary">
+            <i class="bi bi-plus-lg me-1"></i>Add New Tax Rate
+        </a>
+    {% endif %}
+</div>
+
+<!-- Search & Filters -->
+<div class="card mb-4 border-0 shadow-sm">
+    <div class="card-body p-3">
+        <form method="get" class="row g-2 align-items-center">
+            <div class="col-12 col-md-6">
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-search"></i></span>
+                    <input type="text" name="q" value="{{ query }}" class="form-control border-start-0" placeholder="Search tax name...">
+                </div>
+            </div>
+            <div class="col-6 col-md-4">
+                <select name="status" class="form-select">
+                    <option value="active" {% if status == 'active' %}selected{% endif %}>Active Taxes Only</option>
+                    <option value="inactive" {% if status == 'inactive' %}selected{% endif %}>Inactive Taxes</option>
+                    <option value="all" {% if status == 'all' %}selected{% endif %}>All Taxes</option>
+                </select>
+            </div>
+            <div class="col-6 col-md-2 d-flex gap-2">
+                <button type="submit" class="btn btn-primary flex-grow-1">Filter</button>
+                {% if query or status != 'active' %}
+                    <a href="{% url 'catalog:tax_list' %}" class="btn btn-outline-secondary"><i class="bi bi-x-lg"></i></a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Tax Name</th>
+                        <th class="text-end">Percentage Rate</th>
+                        <th>Status</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for tax in page_obj %}
+                        <tr>
+                            <td class="fw-semibold text-dark">{{ tax.name }}</td>
+                            <td class="text-end fw-bold text-primary">{{ tax.rate }}%</td>
+                            <td>
+                                {% if tax.is_active %}
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle"><i class="bi bi-check-circle me-1"></i>Active</span>
+                                {% else %}
+                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle"><i class="bi bi-slash-circle me-1"></i>Inactive</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">
+                                {% if user.role == 'admin' %}
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{% url 'catalog:tax_update' tax.pk %}" class="btn btn-outline-primary" title="Edit Tax">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <form method="post" action="{% url 'catalog:tax_delete' tax.pk %}" class="d-inline">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-outline-secondary" title="{% if tax.is_active %}Deactivate{% else %}Activate{% endif %}" style="border-radius: 0 6px 6px 0;">
+                                                {% if tax.is_active %}
+                                                    <i class="bi bi-toggle-on text-success"></i>
+                                                {% else %}
+                                                    <i class="bi bi-toggle-off text-muted"></i>
+                                                {% endif %}
+                                            </button>
+                                        </form>
+                                    </div>
+                                {% else %}
+                                    <span class="text-muted small">View Only</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center py-5">
+                                <div class="text-muted mb-3"><i class="bi bi-percent fs-1"></i></div>
+                                <h5 class="fw-semibold">No taxes found</h5>
+                                <p class="text-muted small mb-3">
+                                    {% if query %}
+                                        No tax rates matched "{{ query }}".
+                                    {% else %}
+                                        No taxes yet. Add standard tax rates like GST (18%) or VAT (20%) for product pricing.
+                                    {% endif %}
+                                </p>
+                                {% if user.role == 'admin' %}
+                                    <a href="{% url 'catalog:tax_create' %}" class="btn btn-sm btn-primary">
+                                        <i class="bi bi-plus-lg me-1"></i>Add Tax Rate
+                                    </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+        <div class="card-footer bg-white border-0 py-3">
+            <nav aria-label="Taxes pagination">
+                <ul class="pagination pagination-sm justify-content-center mb-0">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}&q={{ query }}&status={{ status }}">&laquo; Prev</a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled"><span class="page-link">&laquo; Prev</span></li>
+                    {% endif %}
+
+                    {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                            <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                        {% else %}
+                            <li class="page-item"><a class="page-link" href="?page={{ num }}&q={{ query }}&status={{ status }}">{{ num }}</a></li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if page_obj.has_next %}
+                        <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}&q={{ query }}&status={{ status }}">Next &raquo;</a></li>
+                    {% else %}
+                        <li class="page-item disabled"><span class="page-link">Next &raquo;</span></li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

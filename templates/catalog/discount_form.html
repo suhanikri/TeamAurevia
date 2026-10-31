@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-12 col-lg-8">
+        <div class="page-header mb-3">
+            <div>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-1 small">
+                        <li class="breadcrumb-item"><a href="{% url 'catalog:dashboard' %}" class="text-decoration-none">Catalog</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'catalog:discount_list' %}" class="text-decoration-none">Discounts</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">{{ title }}</li>
+                    </ol>
+                </nav>
+                <h1>{{ title }}</h1>
+            </div>
+            <a href="{% if discount %}{% url 'catalog:discount_detail' discount.pk %}{% else %}{% url 'catalog:discount_list' %}{% endif %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i>Back
+            </a>
+        </div>
+
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+                <form method="post" novalidate>
+                    {% csrf_token %}
+
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger mb-4">
+                            {% for error in form.non_field_errors %}
+                                <div>{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+
+                    {% if discount %}
+                        <!-- Read-only used_count badge -->
+                        <div class="alert alert-secondary d-flex align-items-center justify-content-between mb-4 py-2">
+                            <div>
+                                <i class="bi bi-info-circle me-1"></i>
+                                <strong>Usage Count (Read-Only):</strong> Used <strong>{{ discount.used_count }}</strong> time{{ discount.used_count|pluralize }}
+                            </div>
+                            <span class="badge bg-dark">Immutable Metric</span>
+                        </div>
+                    {% endif %}
+
+                    <div class="mb-3">
+                        <label for="{{ form.name.id_for_label }}" class="form-label fw-semibold">Discount Name <span class="text-danger">*</span></label>
+                        {{ form.name }}
+                        {% if form.name.errors %}
+                            <div class="text-danger small mt-1">{{ form.name.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-12 col-md-6">
+                            <label for="{{ form.discount_type.id_for_label }}" class="form-label fw-semibold">Discount Type <span class="text-danger">*</span></label>
+                            {{ form.discount_type }}
+                            {% if form.discount_type.errors %}
+                                <div class="text-danger small mt-1">{{ form.discount_type.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label for="{{ form.value.id_for_label }}" class="form-label fw-semibold">Discount Value <span class="text-danger">*</span></label>
+                            {{ form.value }}
+                            <div class="form-text small" id="value-helper">Enter percentage (e.g. 15 for 15%) or dollar amount.</div>
+                            {% if form.value.errors %}
+                                <div class="text-danger small mt-1">{{ form.value.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-12 col-md-6">
+                            <label for="{{ form.min_purchase.id_for_label }}" class="form-label fw-semibold">Minimum Purchase Amount ($)</label>
+                            {{ form.min_purchase }}
+                            <div class="form-text small">Order subtotal must reach this threshold to apply.</div>
+                            {% if form.min_purchase.errors %}
+                                <div class="text-danger small mt-1">{{ form.min_purchase.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label for="{{ form.min_quantity.id_for_label }}" class="form-label fw-semibold">Minimum Item Quantity</label>
+                            {{ form.min_quantity }}
+                            <div class="form-text small">Minimum total units required across applicable lines.</div>
+                            {% if form.min_quantity.errors %}
+                                <div class="text-danger small mt-1">{{ form.min_quantity.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-12 col-md-4">
+                            <label for="{{ form.start_date.id_for_label }}" class="form-label fw-semibold">Start Date</label>
+                            {{ form.start_date }}
+                            {% if form.start_date.errors %}
+                                <div class="text-danger small mt-1">{{ form.start_date.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <label for="{{ form.end_date.id_for_label }}" class="form-label fw-semibold">End Date</label>
+                            {{ form.end_date }}
+                            {% if form.end_date.errors %}
+                                <div class="text-danger small mt-1">{{ form.end_date.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <label for="{{ form.usage_limit.id_for_label }}" class="form-label fw-semibold">Usage Limit</label>
+                            {{ form.usage_limit }}
+                            <div class="form-text small">Blank for unlimited.</div>
+                            {% if form.usage_limit.errors %}
+                                <div class="text-danger small mt-1">{{ form.usage_limit.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Scope Selection -->
+                    <div class="mb-3">
+                        <label for="{{ form.scope.id_for_label }}" class="form-label fw-semibold">Application Scope <span class="text-danger">*</span></label>
+                        {{ form.scope }}
+                        <div class="form-text small">Choose whether this discount applies to the entire subscription or only specific products.</div>
+                        {% if form.scope.errors %}
+                            <div class="text-danger small mt-1">{{ form.scope.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Products Picker (conditionally shown via JavaScript) -->
+                    <div class="mb-4 p-3 bg-light rounded-3 border" id="products-picker-container" style="display: none;">
+                        <label for="{{ form.products.id_for_label }}" class="form-label fw-semibold">
+                            Select Applicable Products <span class="text-danger">*</span>
+                        </label>
+                        {{ form.products }}
+                        <div class="form-text small">Hold <strong>Ctrl</strong> (or <strong>Cmd</strong> on Mac) to select multiple products. This discount will only apply to lines with these products.</div>
+                        {% if form.products.errors %}
+                            <div class="text-danger small mt-1">{{ form.products.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Active Toggle -->
+                    <div class="mb-4">
+                        <div class="form-check form-switch">
+                            {{ form.is_active }}
+                            <label class="form-check-label fw-semibold" for="{{ form.is_active.id_for_label }}">
+                                Active Promotion
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 pt-3 border-top">
+                        <a href="{% if discount %}{% url 'catalog:discount_detail' discount.pk %}{% else %}{% url 'catalog:discount_list' %}{% endif %}" class="btn btn-outline-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary px-4">
+                            <i class="bi bi-check-lg me-1"></i>Save Discount
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function toggleProductsPicker() {
+        const scopeSelect = document.getElementById('id_scope');
+        const container = document.getElementById('products-picker-container');
+        if (scopeSelect && container) {
+            if (scopeSelect.value === 'products') {
+                container.style.display = 'block';
+            } else {
+                container.style.display = 'none';
+            }
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const scopeSelect = document.getElementById('id_scope');
+        if (scopeSelect) {
+            scopeSelect.addEventListener('change', toggleProductsPicker);
+            toggleProductsPicker();
+        }
+    });
+</script>
+{% endblock %}

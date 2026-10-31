@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+
+{% block title %}Catalog Dashboard{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>Catalog Management</h1>
+        <p class="text-muted mb-0">Configure products, plans, taxes, discounts, and quotation templates for Brightloop Software.</p>
+    </div>
+    {% if user.role == 'admin' %}
+        <span class="badge bg-primary-subtle text-primary border border-primary-subtle py-2 px-3">
+            <i class="bi bi-shield-check me-1"></i>Administrator Mode: Full CRUD Access
+        </span>
+    {% else %}
+        <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle py-2 px-3">
+            <i class="bi bi-eye me-1"></i>Staff Mode: Read-Only Catalog Access
+        </span>
+    {% endif %}
+</div>
+
+<!-- Overview Stats Cards -->
+<div class="row g-4 mb-4">
+    <!-- Products Card -->
+    <div class="col-12 col-sm-6 col-xl-4">
+        <div class="card h-100 shadow-sm border-0 border-top border-primary border-3">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="text-muted fw-semibold">Products & Variants</span>
+                    <div class="bg-primary-subtle text-primary p-2 rounded-3">
+                        <i class="bi bi-box-seam fs-4"></i>
+                    </div>
+                </div>
+                <h2 class="display-6 fw-bold text-dark mb-1">{{ products_count }}</h2>
+                <p class="text-muted small mb-3">Active software, service, and add-on products with pricing and attributes.</p>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'catalog:product_list' %}" class="btn btn-sm btn-outline-primary flex-grow-1">View Products</a>
+                    {% if user.role == 'admin' %}
+                        <a href="{% url 'catalog:product_create' %}" class="btn btn-sm btn-primary"><i class="bi bi-plus-lg"></i></a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Plans Card -->
+    <div class="col-12 col-sm-6 col-xl-4">
+        <div class="card h-100 shadow-sm border-0 border-top border-info border-3">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="text-muted fw-semibold">Subscription Plans</span>
+                    <div class="bg-info-subtle text-info p-2 rounded-3">
+                        <i class="bi bi-calendar-check fs-4"></i>
+                    </div>
+                </div>
+                <h2 class="display-6 fw-bold text-dark mb-1">{{ plans_count }}</h2>
+                <p class="text-muted small mb-3">Billing frequencies, periods, lifecycle flags (auto-close, pausable, closable, renewable).</p>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'catalog:plan_list' %}" class="btn btn-sm btn-outline-info flex-grow-1">View Plans</a>
+                    {% if user.role == 'admin' %}
+                        <a href="{% url 'catalog:plan_create' %}" class="btn btn-sm btn-info text-white"><i class="bi bi-plus-lg"></i></a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Taxes Card -->
+    <div class="col-12 col-sm-6 col-xl-4">
+        <div class="card h-100 shadow-sm border-0 border-top border-success border-3">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="text-muted fw-semibold">Taxes</span>
+                    <div class="bg-success-subtle text-success p-2 rounded-3">
+                        <i class="bi bi-percent fs-4"></i>
+                    </div>
+                </div>
+                <h2 class="display-6 fw-bold text-dark mb-1">{{ taxes_count }}</h2>
+                <p class="text-muted small mb-3">Standard GST, VAT, and regional tax rates automatically calculated per line.</p>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'catalog:tax_list' %}" class="btn btn-sm btn-outline-success flex-grow-1">View Taxes</a>
+                    {% if user.role == 'admin' %}
+                        <a href="{% url 'catalog:tax_create' %}" class="btn btn-sm btn-success"><i class="bi bi-plus-lg"></i></a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Discounts Card -->
+    <div class="col-12 col-sm-6 col-xl-4">
+        <div class="card h-100 shadow-sm border-0 border-top border-warning border-3">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="text-muted fw-semibold">Discounts & Promos</span>
+                    <div class="bg-warning-subtle text-warning-emphasis p-2 rounded-3">
+                        <i class="bi bi-tag fs-4"></i>
+                    </div>
+                </div>
+                <h2 class="display-6 fw-bold text-dark mb-1">{{ discounts_count }}</h2>
+                <p class="text-muted small mb-3">Fixed/percentage promotional rules, purchase & quantity minimums, and usage limits.</p>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'catalog:discount_list' %}" class="btn btn-sm btn-outline-warning flex-grow-1">View Discounts</a>
+                    {% if user.role == 'admin' %}
+                        <a href="{% url 'catalog:discount_create' %}" class="btn btn-sm btn-warning"><i class="bi bi-plus-lg"></i></a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quotation Templates Card -->
+    <div class="col-12 col-sm-6 col-xl-4">
+        <div class="card h-100 shadow-sm border-0 border-top border-purple border-3" style="border-top-color: #8b5cf6 !important;">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="text-muted fw-semibold">Quotation Templates</span>
+                    <div class="p-2 rounded-3" style="background-color: #ede9fe; color: #7c3aed;">
+                        <i class="bi bi-file-earmark-text fs-4"></i>
+                    </div>
+                </div>
+                <h2 class="display-6 fw-bold text-dark mb-1">{{ templates_count }}</h2>
+                <p class="text-muted small mb-3">Standard pre-packaged bundles of products and plans for rapid sales quotation creation.</p>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'catalog:template_list' %}" class="btn btn-sm btn-outline-secondary flex-grow-1">View Templates</a>
+                    {% if user.role == 'admin' %}
+                        <a href="{% url 'catalog:template_create' %}" class="btn btn-sm btn-secondary"><i class="bi bi-plus-lg"></i></a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Help & Workflow Card -->
+    <div class="col-12 col-sm-6 col-xl-4">
+        <div class="card h-100 shadow-sm border-0 bg-light">
+            <div class="card-body">
+                <h5 class="fw-bold mb-2"><i class="bi bi-lightbulb-fill text-warning me-2"></i>Catalog Architecture</h5>
+                <p class="small text-muted mb-2">
+                    The <strong>SubSentry Catalog</strong> feeds into the <em>Billing Integrity Engine</em>:
+                </p>
+                <ul class="small text-muted ps-3 mb-0">
+                    <li>Create Products and optional Variants (e.g. Odoo +$560)</li>
+                    <li>Define recurring billing Plans with validity ranges</li>
+                    <li>Set up Tax rates (18% GST) and Discounts</li>
+                    <li>Assemble Quotation Templates for staff sales pipelines</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% endblock %}
