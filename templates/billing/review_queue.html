@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+{% load subsentry_extras %}
+
+{% block title %}Review Queue - SubSentry{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <h1 class="h3 fw-bold text-dark mb-0">Billing Review Queue</h1>
+                {% if unresolved_count > 0 %}
+                <span class="badge bg-danger rounded-pill px-2 py-1">{{ unresolved_count }} Action{{ unresolved_count|pluralize }} Required</span>
+                {% else %}
+                <span class="badge bg-success rounded-pill px-2 py-1"><i class="bi bi-check-circle me-1"></i>Queue Clear</span>
+                {% endif %}
+            </div>
+            <p class="text-muted mb-0 small">Audit queue for subscriptions flagged by the Billing Integrity Engine</p>
+        </div>
+
+        <div>
+            <a href="{% url 'billing_run:home' %}" class="btn btn-outline-secondary btn-sm shadow-sm">
+                <i class="bi bi-arrow-left me-1"></i>Back to Billing Runs
+            </a>
+        </div>
+    </div>
+
+    <!-- Filter Nav Tabs -->
+    <ul class="nav nav-pills mb-4 bg-white p-2 rounded shadow-sm border">
+        <li class="nav-item">
+            <a class="nav-link {% if filter_status == 'unresolved' %}active bg-primary{% endif %}" href="{% url 'billing_run:review' %}?status=unresolved">
+                <i class="bi bi-exclamation-circle me-1"></i>Unresolved Pending
+                {% if unresolved_count > 0 %}
+                <span class="badge bg-danger ms-1">{{ unresolved_count }}</span>
+                {% endif %}
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if filter_status == 'resolved' %}active bg-primary{% endif %}" href="{% url 'billing_run:review' %}?status=resolved">
+                <i class="bi bi-check2-circle me-1"></i>Resolved History
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if filter_status == 'all' %}active bg-primary{% endif %}" href="{% url 'billing_run:review' %}?status=all">
+                All Records
+            </a>
+        </li>
+    </ul>
+
+    <!-- Flags Table -->
+    {% if page_obj %}
+    <div class="card shadow-sm border-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th scope="col" class="ps-3">Subscription</th>
+                        <th scope="col">Customer</th>
+                        <th scope="col">Run Reference</th>
+                        <th scope="col">Validation Reason</th>
+                        <th scope="col" style="min-width: 250px;">Message</th>
+                        <th scope="col">Flagged Date</th>
+                        <th scope="col" class="text-end pe-3">Resolution</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for flag in page_obj %}
+                    <tr class="{% if not flag.resolved %}table-warning-subtle{% endif %}">
+                        <td class="ps-3">
+                            <a href="/subscriptions/{{ flag.subscription.id }}/" class="fw-bold text-primary text-decoration-none">
+                                {{ flag.subscription.number|default:flag.subscription.id }}
+                            </a>
+                        </td>
+                        <td>
+                            <span class="text-dark fw-medium">{{ flag.subscription.customer.email }}</span>
+                        </td>
+                        <td>
+                            <span class="badge bg-light text-secondary border">Run #{{ flag.run.id }}</span>
+                        </td>
+                        <td>
+                            <span class="badge {% if not flag.resolved %}bg-danger text-white{% else %}bg-secondary text-white{% endif %}">
+                                {{ flag.get_reason_display }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="small text-dark">{{ flag.message }}</span>
+                        </td>
+                        <td>
+                            <span class="small text-muted">{{ flag.created_at|date:"d M Y, H:i" }}</span>
+                        </td>
+                        <td class="text-end pe-3">
+                            {% if not flag.resolved %}
+                            <form method="post" action="{% url 'billing_run:resolve_flag' flag.id %}" class="d-inline m-0">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-outline-success shadow-none">
+                                    <i class="bi bi-check-lg me-1"></i>Mark Resolved
+                                </button>
+                            </form>
+                            {% else %}
+                            <span class="badge bg-success-subtle text-success border border-success-subtle">
+                                <i class="bi bi-check-circle me-1"></i>Resolved
+                            </span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="p-0">
+                            {% include 'includes/empty_state.html' with icon="bi-shield-check" title="Review Queue is Clean!" message="No billing exceptions matched your selected filter." %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {% include 'includes/pagination.html' with page_obj=page_obj %}
+
+    {% else %}
+        {% include 'includes/empty_state.html' with icon="bi-shield-check" title="Review Queue Clear!" message="All billing validations passed. There are no pending billing flags requiring manual review." %}
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,249 @@
+{% extends 'base.html' %}
+{% load subsentry_extras %}
+
+{% block title %}Billing Run Report #{{ billing_run.id }} - SubSentry{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Success Celebration Banner -->
+    <div class="card shadow-sm border-0 bg-gradient text-white mb-4" style="background: linear-gradient(135deg, #4f46e5 0%, #1e1b4b 100%);">
+        <div class="card-body p-4 p-md-5">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <div>
+                    <span class="badge bg-white text-primary fw-bold text-uppercase px-3 py-2 mb-2">
+                        <i class="bi bi-shield-check me-1"></i>Execution Completed
+                    </span>
+                    <h1 class="display-6 fw-bold mb-2">Billing Run Report #{{ billing_run.id }}</h1>
+                    <p class="lead mb-0 opacity-75 small">
+                        Processed on {{ billing_run.run_at|date:"d M Y \a\t H:i" }} by <strong>{{ billing_run.run_by.email|default:'System Engine' }}</strong>
+                    </p>
+                </div>
+
+                <div class="text-md-end">
+                    <span class="opacity-75 small d-block">Total Billed in this Run</span>
+                    <span class="display-5 fw-bold text-white">{{ billing_run.total_due|inr }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Navigation Toolbar -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <a href="{% url 'billing_run:home' %}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left me-1"></i>Back to Billing Runs
+        </a>
+        <div class="d-flex gap-2">
+            <a href="{% url 'invoices:list' %}" class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-receipt me-1"></i>View All Invoices
+            </a>
+            <a href="{% url 'billing_run:review' %}" class="btn btn-outline-warning btn-sm">
+                <i class="bi bi-flag me-1"></i>Inspect Review Queue
+            </a>
+        </div>
+    </div>
+
+    <!-- KPI Summary Metric Cards -->
+    <div class="row g-3 mb-4">
+        <!-- Invoices Created -->
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 border-start border-4 border-success h-100">
+                <div class="card-body p-3 d-flex align-items-center gap-3">
+                    <span class="d-inline-flex align-items-center justify-content-center bg-success-subtle text-success rounded-circle p-3">
+                        <i class="bi bi-check2-circle fs-3"></i>
+                    </span>
+                    <div>
+                        <span class="text-muted small fw-semibold text-uppercase d-block">Generated Invoices</span>
+                        <div class="fs-3 fw-bold text-success">{{ generated_invoices|length }}</div>
+                        <span class="small text-muted">{{ billing_run.total_due|inr }} total value</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Skipped / Prevented -->
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 border-start border-4 border-secondary h-100">
+                <div class="card-body p-3 d-flex align-items-center gap-3">
+                    <span class="d-inline-flex align-items-center justify-content-center bg-secondary-subtle text-secondary rounded-circle p-3">
+                        <i class="bi bi-arrow-repeat fs-3"></i>
+                    </span>
+                    <div>
+                        <span class="text-muted small fw-semibold text-uppercase d-block">Skipped Subscriptions</span>
+                        <div class="fs-3 fw-bold text-secondary">{{ skipped_items|length }}</div>
+                        <span class="small text-muted">Protected against double-billing</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Flagged -->
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 border-start border-4 border-danger h-100">
+                <div class="card-body p-3 d-flex align-items-center gap-3">
+                    <span class="d-inline-flex align-items-center justify-content-center bg-danger-subtle text-danger rounded-circle p-3">
+                        <i class="bi bi-exclamation-triangle fs-3"></i>
+                    </span>
+                    <div>
+                        <span class="text-muted small fw-semibold text-uppercase d-block">Flagged for Review</span>
+                        <div class="fs-3 fw-bold text-danger">{{ flagged_items|length }}</div>
+                        <span class="small text-muted">Isolated in Review Queue</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Generated Invoices Table -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+            <h5 class="card-title fw-bold text-success mb-0">
+                <i class="bi bi-receipt-cutoff me-1"></i>Newly Generated Invoices ({{ generated_invoices|length }})
+            </h5>
+            <span class="badge bg-success-subtle text-success">Draft Status &middot; Ready for Staff Review</span>
+        </div>
+
+        {% if generated_invoices %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th scope="col" class="ps-3">Invoice Number</th>
+                        <th scope="col">Customer</th>
+                        <th scope="col">Subscription</th>
+                        <th scope="col">Due Date</th>
+                        <th scope="col" class="text-end">Total Amount</th>
+                        <th scope="col" class="text-center">Status</th>
+                        <th scope="col" class="text-end pe-3">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for inv in generated_invoices %}
+                    <tr>
+                        <td class="ps-3">
+                            <a href="{% url 'invoices:detail' inv.id %}" class="fw-bold text-primary text-decoration-none">
+                                {{ inv.number|default:inv.id }}
+                            </a>
+                        </td>
+                        <td>
+                            <span class="text-dark fw-medium">{{ inv.customer.email }}</span>
+                        </td>
+                        <td>
+                            <a href="/subscriptions/{{ inv.subscription.id }}/" class="text-secondary small text-decoration-none">
+                                {{ inv.subscription.number|default:inv.subscription.id }}
+                            </a>
+                        </td>
+                        <td>{{ inv.due_date|date:"d M Y" }}</td>
+                        <td class="text-end fw-bold text-dark">{{ inv.total|inr }}</td>
+                        <td class="text-center">
+                            {% include 'includes/status_badge.html' with status=inv.status %}
+                        </td>
+                        <td class="text-end pe-3">
+                            <a href="{% url 'invoices:detail' inv.id %}" class="btn btn-sm btn-outline-primary">
+                                Inspect <i class="bi bi-chevron-right ms-1"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="p-4 text-center text-muted">
+            <p class="mb-0">No new invoices were generated during this run.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Skipped Subscriptions (Double-Billing Guard) -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+            <h5 class="card-title fw-bold text-secondary mb-0">
+                <i class="bi bi-shield-lock me-1"></i>Skipped Subscriptions ({{ skipped_items|length }})
+            </h5>
+            <span class="badge bg-secondary-subtle text-secondary">Integrity Protection Active</span>
+        </div>
+
+        {% if skipped_items %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th scope="col" class="ps-3">Subscription</th>
+                        <th scope="col">Customer</th>
+                        <th scope="col" class="pe-3">Protection Reason</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in skipped_items %}
+                    <tr>
+                        <td class="ps-3">
+                            <a href="/subscriptions/{{ item.subscription.id }}/" class="fw-semibold text-secondary text-decoration-none">
+                                {{ item.subscription.number|default:item.subscription.id }}
+                            </a>
+                        </td>
+                        <td>{{ item.subscription.customer.email }}</td>
+                        <td class="pe-3 text-muted small">
+                            <i class="bi bi-shield-check text-success me-1"></i>{{ item.message }}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="p-4 text-center text-muted">
+            <p class="mb-0">No subscriptions were skipped.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Flagged Subscriptions Table -->
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+            <h5 class="card-title fw-bold text-danger mb-0">
+                <i class="bi bi-flag me-1"></i>Flagged Subscriptions Sent to Review Queue ({{ flagged_items|length }})
+            </h5>
+            <a href="{% url 'billing_run:review' %}" class="btn btn-sm btn-outline-danger">
+                Open Review Queue <i class="bi bi-arrow-right ms-1"></i>
+            </a>
+        </div>
+
+        {% if flagged_items %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th scope="col" class="ps-3">Subscription</th>
+                        <th scope="col">Customer</th>
+                        <th scope="col">Validation Reason</th>
+                        <th scope="col" class="pe-3">Action Required</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in flagged_items %}
+                    <tr>
+                        <td class="ps-3">
+                            <a href="/subscriptions/{{ item.subscription.id }}/" class="fw-semibold text-danger text-decoration-none">
+                                {{ item.subscription.number|default:item.subscription.id }}
+                            </a>
+                        </td>
+                        <td>{{ item.subscription.customer.email }}</td>
+                        <td>
+                            <span class="badge bg-warning text-dark">{{ item.reason|title }}</span>
+                        </td>
+                        <td class="pe-3 text-dark small">
+                            {{ item.message }}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="p-4 text-center text-muted">
+            <p class="mb-0">No subscriptions were flagged for review in this run.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

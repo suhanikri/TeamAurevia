@@ -1,0 +1,162 @@
+{% extends 'base.html' %}
+{% load subsentry_extras %}
+
+{% block title %}Billing Run - SubSentry{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <h1 class="h3 fw-bold text-dark mb-0">Billing Run</h1>
+                <span class="badge bg-success-subtle text-success border border-success-subtle">
+                    <i class="bi bi-shield-check me-1"></i>Integrity Engine Active
+                </span>
+            </div>
+            <p class="text-muted mb-0 small">Automated batch billing, double-billing prevention, and audit validation</p>
+        </div>
+
+        <div>
+            <a href="{% url 'billing_run:review' %}" class="btn btn-outline-warning position-relative shadow-sm">
+                <i class="bi bi-flag me-1"></i>Review Queue
+                {% if unresolved_flags_count > 0 %}
+                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                    {{ unresolved_flags_count }}
+                </span>
+                {% endif %}
+            </a>
+        </div>
+    </div>
+
+    <!-- Main Action Card -->
+    <div class="row g-4 mb-4">
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <span class="d-inline-flex align-items-center justify-content-center bg-primary-subtle text-primary rounded-3 p-3">
+                            <i class="bi bi-gear-wide-connected fs-2"></i>
+                        </span>
+                        <div>
+                            <h4 class="fw-bold text-dark mb-1">Execute Subscription Billing</h4>
+                            <p class="text-muted small mb-0">
+                                Evaluates due subscriptions, prevents duplicate billing, computes discounts and taxes, and creates draft invoices.
+                            </p>
+                        </div>
+                    </div>
+
+                    <form method="post" action="{% url 'billing_run:preview' %}" class="mt-4">
+                        {% csrf_token %}
+                        <div class="row g-3 align-items-end">
+                            <div class="col-sm-6">
+                                <label for="targetDate" class="form-label small fw-semibold text-dark">
+                                    Billing Assessment Date
+                                </label>
+                                <input type="date" name="target_date" id="targetDate" class="form-control" value="{{ today_str }}" required>
+                                <div class="form-text text-muted small">Subscriptions with next invoice date &le; this date will be evaluated.</div>
+                            </div>
+                            <div class="col-sm-6">
+                                <button type="submit" class="btn btn-primary w-100 py-2 shadow-sm fw-semibold">
+                                    <i class="bi bi-eye me-1"></i>Preview Billing Run
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Review Queue Summary Card -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm border-0 h-100 bg-white">
+                <div class="card-body p-4 d-flex flex-column justify-content-between">
+                    <div>
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <h5 class="fw-bold text-dark mb-0">Review Queue</h5>
+                            <span class="badge {% if unresolved_flags_count > 0 %}bg-danger{% else %}bg-success{% endif %}">
+                                {{ unresolved_flags_count }} Pending
+                            </span>
+                        </div>
+                        <p class="text-muted small mb-3">
+                            Subscriptions with expired plans, missing taxes, or inactive statuses are automatically isolated here so billing is never interrupted.
+                        </p>
+                    </div>
+
+                    <div>
+                        <a href="{% url 'billing_run:review' %}" class="btn btn-outline-primary btn-sm w-100">
+                            Inspect Flagged Subscriptions <i class="bi bi-arrow-right ms-1"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Billing Runs Table -->
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+            <h5 class="card-title fw-bold text-dark mb-0">Recent Billing Runs</h5>
+            <span class="badge bg-secondary-subtle text-secondary">{{ recent_runs|length }} executed</span>
+        </div>
+
+        {% if recent_runs %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th scope="col" class="ps-3">Run ID</th>
+                        <th scope="col">Executed At</th>
+                        <th scope="col">Executed By</th>
+                        <th scope="col" class="text-end">Total Due</th>
+                        <th scope="col" class="text-center">Generated</th>
+                        <th scope="col" class="text-center">Skipped</th>
+                        <th scope="col" class="text-center pe-3">Flagged</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for run in recent_runs %}
+                    <tr>
+                        <td class="ps-3 fw-bold text-dark">
+                            #{{ run.id }}
+                            {% if run.is_preview %}
+                            <span class="badge bg-light text-muted border ms-1">Preview</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ run.run_at|date:"d M Y, H:i" }}</td>
+                        <td>
+                            <span class="small text-muted">{{ run.run_by.email|default:'System Engine' }}</span>
+                        </td>
+                        <td class="text-end fw-bold text-primary">{{ run.total_due|inr }}</td>
+                        <td class="text-center">
+                            <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">
+                                {{ run.generated }} invoice{{ run.generated|pluralize }}
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            <span class="badge bg-secondary-subtle text-secondary px-2 py-1">
+                                {{ run.skipped }} skipped
+                            </span>
+                        </td>
+                        <td class="text-center pe-3">
+                            {% if run.flagged > 0 %}
+                            <a href="{% url 'billing_run:review' %}" class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1 text-decoration-none">
+                                {{ run.flagged }} flagged
+                            </a>
+                            {% else %}
+                            <span class="badge bg-light text-muted px-2 py-1">0</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="p-4">
+            {% include 'includes/empty_state.html' with icon="bi-clock-history" title="No Billing Runs Executed" message="No automated billing runs have been recorded yet. Click 'Preview Billing Run' above to start your first billing cycle." %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

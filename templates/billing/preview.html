@@ -1,0 +1,226 @@
+{% extends 'base.html' %}
+{% load subsentry_extras %}
+
+{% block title %}Billing Preview ({{ target_date|date:"d M Y" }}) - SubSentry{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Top Bar -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <a href="{% url 'billing_run:home' %}" class="btn btn-sm btn-outline-secondary mb-2">
+                <i class="bi bi-arrow-left me-1"></i>Back to Billing Run
+            </a>
+            <h1 class="h3 fw-bold text-dark mb-0">Billing Run Preview</h1>
+            <p class="text-muted small mb-0">Evaluation results for subscriptions due on or before <strong>{{ target_date|date:"d M Y" }}</strong></p>
+        </div>
+
+        {% if ready_subs %}
+        <form method="post" action="{% url 'billing_run:run' %}" onsubmit="return confirm('Execute Billing Run now? This will generate draft invoices for all {{ ready_subs|length }} ready subscriptions.');" class="m-0">
+            {% csrf_token %}
+            <input type="hidden" name="target_date" value="{{ target_date|date:'Y-m-d' }}">
+            <button type="submit" class="btn btn-success btn-lg shadow-sm fw-bold px-4 py-2">
+                <i class="bi bi-play-circle-fill me-2"></i>Run Billing Now ({{ ready_subs|length }})
+            </button>
+        </form>
+        {% endif %}
+    </div>
+
+    <!-- Summary Metrics Cards -->
+    <div class="row g-3 mb-4">
+        <!-- Ready Card -->
+        <div class="col-sm-6 col-lg-3">
+            <div class="card shadow-sm border-0 border-start border-4 border-success h-100">
+                <div class="card-body p-3">
+                    <span class="text-muted small fw-semibold text-uppercase d-block mb-1">Ready to Bill</span>
+                    <div class="d-flex align-items-baseline gap-2">
+                        <span class="fs-2 fw-bold text-success">{{ ready_subs|length }}</span>
+                        <span class="text-muted small">subscriptions</span>
+                    </div>
+                    <span class="small text-muted mt-1 d-block">Estimated: <strong class="text-dark">{{ potential_total|inr }}</strong></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Skipped Card -->
+        <div class="col-sm-6 col-lg-3">
+            <div class="card shadow-sm border-0 border-start border-4 border-secondary h-100">
+                <div class="card-body p-3">
+                    <span class="text-muted small fw-semibold text-uppercase d-block mb-1">Skipped (Duplicate Safe)</span>
+                    <div class="d-flex align-items-baseline gap-2">
+                        <span class="fs-2 fw-bold text-secondary">{{ skipped_items|length }}</span>
+                        <span class="text-muted small">subscriptions</span>
+                    </div>
+                    <span class="small text-muted mt-1 d-block">Already invoiced for period</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Flagged Card -->
+        <div class="col-sm-6 col-lg-3">
+            <div class="card shadow-sm border-0 border-start border-4 border-danger h-100">
+                <div class="card-body p-3">
+                    <span class="text-muted small fw-semibold text-uppercase d-block mb-1">Flagged for Review</span>
+                    <div class="d-flex align-items-baseline gap-2">
+                        <span class="fs-2 fw-bold text-danger">{{ flagged_items|length }}</span>
+                        <span class="text-muted small">exceptions</span>
+                    </div>
+                    <span class="small text-muted mt-1 d-block">Requires staff resolution</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Evaluated -->
+        <div class="col-sm-6 col-lg-3">
+            <div class="card shadow-sm border-0 border-start border-4 border-primary h-100">
+                <div class="card-body p-3">
+                    <span class="text-muted small fw-semibold text-uppercase d-block mb-1">Total Assessed</span>
+                    <div class="d-flex align-items-baseline gap-2">
+                        <span class="fs-2 fw-bold text-primary">{{ ready_subs|length|add:skipped_items|length|add:flagged_items|length }}</span>
+                        <span class="text-muted small">candidates</span>
+                    </div>
+                    <span class="small text-muted mt-1 d-block">Assessment date: {{ target_date|date:"d M Y" }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ready Subscriptions Table -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+            <h5 class="card-title fw-bold text-success mb-0">
+                <i class="bi bi-check-circle me-1"></i>Ready Subscriptions ({{ ready_subs|length }})
+            </h5>
+            {% if ready_subs %}
+            <span class="badge bg-success-subtle text-success">Will generate draft invoices</span>
+            {% endif %}
+        </div>
+
+        {% if ready_subs %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th scope="col" class="ps-3">Subscription</th>
+                        <th scope="col">Customer</th>
+                        <th scope="col">Plan</th>
+                        <th scope="col">Next Invoice Date</th>
+                        <th scope="col" class="text-end pe-3">Expected Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sub in ready_subs %}
+                    <tr>
+                        <td class="ps-3">
+                            <a href="/subscriptions/{{ sub.id }}/" class="fw-semibold text-primary text-decoration-none">
+                                {{ sub.number|default:sub.id }}
+                            </a>
+                        </td>
+                        <td>{{ sub.customer.email }}</td>
+                        <td>{{ sub.plan.name }} ({{ sub.plan.get_billing_period_display }})</td>
+                        <td>{{ sub.next_invoice_date|date:"d M Y" }}</td>
+                        <td class="text-end pe-3 fw-bold text-dark">{{ sub.total|inr }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="p-4 text-center text-muted">
+            <i class="bi bi-check2-all display-6 d-block mb-2 text-secondary opacity-50"></i>
+            <p class="mb-0">No subscriptions are currently due for billing on or before {{ target_date|date:"d M Y" }}.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Skipped Subscriptions (Double-Billing Prevention) -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+            <h5 class="card-title fw-bold text-secondary mb-0">
+                <i class="bi bi-arrow-repeat me-1"></i>Skipped Subscriptions ({{ skipped_items|length }})
+            </h5>
+            <span class="badge bg-secondary-subtle text-secondary">Billing Integrity Safe</span>
+        </div>
+
+        {% if skipped_items %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th scope="col" class="ps-3">Subscription</th>
+                        <th scope="col">Customer</th>
+                        <th scope="col" class="pe-3">Integrity Engine Reason</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in skipped_items %}
+                    <tr>
+                        <td class="ps-3">
+                            <a href="/subscriptions/{{ item.subscription.id }}/" class="fw-semibold text-secondary text-decoration-none">
+                                {{ item.subscription.number|default:item.subscription.id }}
+                            </a>
+                        </td>
+                        <td>{{ item.subscription.customer.email }}</td>
+                        <td class="pe-3 text-muted small">
+                            <i class="bi bi-info-circle text-primary me-1"></i>{{ item.message }}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="p-4 text-center text-muted">
+            <p class="mb-0">No subscriptions were skipped in this run.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Flagged Subscriptions Table -->
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+            <h5 class="card-title fw-bold text-danger mb-0">
+                <i class="bi bi-flag me-1"></i>Flagged Subscriptions ({{ flagged_items|length }})
+            </h5>
+            <span class="badge bg-danger-subtle text-danger">Requires Action</span>
+        </div>
+
+        {% if flagged_items %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th scope="col" class="ps-3">Subscription</th>
+                        <th scope="col">Customer</th>
+                        <th scope="col">Reason</th>
+                        <th scope="col" class="pe-3">Explanation Message</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in flagged_items %}
+                    <tr>
+                        <td class="ps-3">
+                            <a href="/subscriptions/{{ item.subscription.id }}/" class="fw-semibold text-danger text-decoration-none">
+                                {{ item.subscription.number|default:item.subscription.id }}
+                            </a>
+                        </td>
+                        <td>{{ item.subscription.customer.email }}</td>
+                        <td>
+                            <span class="badge bg-warning text-dark">{{ item.reason|title }}</span>
+                        </td>
+                        <td class="pe-3 text-dark small">
+                            {{ item.message }}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="p-4 text-center text-muted">
+            <p class="mb-0">No validation issues detected! All subscriptions passed integrity checks.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
