@@ -155,3 +155,5 @@ del MAILERS
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 TIME_ZONE = 'Asia/Kolkata'
 
+
+INSTALLED_APPS += ['portal']
