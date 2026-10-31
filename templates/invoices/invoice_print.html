@@ -1,0 +1,216 @@
+{% extends 'base.html' %}
+{% load subsentry_extras %}
+
+{% block title %}Print Invoice {{ invoice.number|default:invoice.id }} - SubSentry{% endblock %}
+
+{% block content %}
+<div class="container py-4" style="max-width: 900px;">
+    <!-- Print Controls (Hidden when printed) -->
+    <div class="d-flex justify-content-between align-items-center mb-4 no-print bg-white p-3 rounded shadow-sm border">
+        <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-printer text-primary fs-4"></i>
+            <span class="fw-semibold">Print Preview for Invoice {{ invoice.number }}</span>
+        </div>
+        <div class="d-flex gap-2">
+            <button type="button" class="btn btn-primary btn-sm px-3" onclick="window.print()">
+                <i class="bi bi-printer me-1"></i>Print Now
+            </button>
+            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="window.close()">
+                <i class="bi bi-x me-1"></i>Close
+            </button>
+        </div>
+    </div>
+
+    <!-- Printable Invoice Sheet -->
+    <div class="card border p-4 p-md-5 bg-white">
+        <!-- Header -->
+        <div class="row align-items-start mb-4">
+            <div class="col-7">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <span class="d-inline-flex align-items-center justify-content-center bg-primary text-white rounded p-2">
+                        <i class="bi bi-shield-check fs-4"></i>
+                    </span>
+                    <div>
+                        <h3 class="fw-bold text-dark mb-0">Brightloop Software</h3>
+                        <span class="text-muted small">Subscription Management Platform</span>
+                    </div>
+                </div>
+                <div class="mt-3 small">
+                    <span class="text-muted d-block">Billed To:</span>
+                    <strong class="text-dark fs-6">{{ invoice.customer.email }}</strong>
+                    <div class="text-muted mt-1">
+                        Subscription Ref: <strong>{{ invoice.subscription.number|default:invoice.subscription.id }}</strong>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-5 text-end">
+                <h2 class="h3 fw-bold text-dark mb-1">{{ invoice.number|default:invoice.id }}</h2>
+                <div class="text-muted small mb-2">Status: <strong class="text-uppercase text-dark">{{ invoice.status }}</strong></div>
+
+                <!-- Print Stamp -->
+                <div class="mt-2">
+                    {% if invoice.status == 'paid' %}
+                        <span class="invoice-stamp stamp-paid">PAID</span>
+                    {% elif invoice.is_overdue %}
+                        <span class="invoice-stamp stamp-due">OVERDUE</span>
+                    {% elif invoice.balance > 0 %}
+                        <span class="invoice-stamp stamp-due">DUE</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Dates Bar -->
+        <div class="row g-2 p-3 bg-light rounded mb-4 text-center text-sm-start border">
+            <div class="col-4">
+                <span class="text-muted small d-block">Invoice Date</span>
+                <strong>{{ invoice.invoice_date|date:"d M Y" }}</strong>
+            </div>
+            <div class="col-4">
+                <span class="text-muted small d-block">Due Date</span>
+                <strong>{{ invoice.due_date|date:"d M Y" }}</strong>
+            </div>
+            <div class="col-4 text-end">
+                <span class="text-muted small d-block">Billing Period</span>
+                <strong>{{ invoice.period_start|date:"d M Y" }} &ndash; {{ invoice.period_end|date:"d M Y" }}</strong>
+            </div>
+        </div>
+
+        <!-- Lines Table -->
+        <div class="table-responsive mb-4">
+            <table class="table align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th scope="col" class="ps-2">Item / Description</th>
+                        <th scope="col" class="text-center" style="width: 10%;">Qty</th>
+                        <th scope="col" class="text-end" style="width: 18%;">Unit Price</th>
+                        <th scope="col" class="text-end" style="width: 18%;">Tax</th>
+                        <th scope="col" class="text-end pe-2" style="width: 20%;">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for line in invoice.lines.all %}
+                    <tr class="{% if line.is_discount or line.amount < 0 %}discount-row{% endif %}">
+                        <td class="ps-2">
+                            <span class="fw-semibold {% if line.is_discount %}text-success{% else %}text-dark{% endif %}">
+                                {{ line.description }}
+                            </span>
+                            {% if line.product %}
+                                <span class="text-muted small d-block">({{ line.product.name }})</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">{{ line.quantity }}</td>
+                        <td class="text-end">
+                            {% if line.is_discount or line.unit_price < 0 %}
+                                <span class="discount-row">-{{ line.unit_price|abs|inr }}</span>
+                            {% else %}
+                                {{ line.unit_price|inr }}
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            {% if line.tax_amount and line.tax_amount > 0 %}
+                                <span class="small text-muted">{{ line.tax_rate }}%:</span> {{ line.tax_amount|inr }}
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end pe-2 fw-semibold {% if line.is_discount or line.amount < 0 %}discount-row{% else %}text-dark{% endif %}">
+                            {% if line.is_discount or line.amount < 0 %}
+                                -{{ line.amount|abs|inr }}
+                            {% else %}
+                                {{ line.amount|inr }}
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center py-3 text-muted">No line items recorded on this invoice.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Totals Summary -->
+        <div class="row justify-content-end mb-4">
+            <div class="col-5">
+                <ul class="list-group list-group-flush border-top">
+                    <li class="list-group-item d-flex justify-content-between px-2 py-1">
+                        <span class="text-muted">Subtotal:</span>
+                        <strong>{{ invoice.subtotal|inr }}</strong>
+                    </li>
+                    {% if invoice.discount_total and invoice.discount_total > 0 %}
+                    <li class="list-group-item d-flex justify-content-between px-2 py-1 text-success">
+                        <span>Discount:</span>
+                        <strong>-{{ invoice.discount_total|inr }}</strong>
+                    </li>
+                    {% endif %}
+                    <li class="list-group-item d-flex justify-content-between px-2 py-1">
+                        <span class="text-muted">Tax:</span>
+                        <strong>{{ invoice.tax_total|inr }}</strong>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between px-2 py-1 bg-light">
+                        <span class="fw-bold">Total:</span>
+                        <strong class="text-primary">{{ invoice.total|inr }}</strong>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between px-2 py-1">
+                        <span class="text-muted">Paid:</span>
+                        <span class="text-success">{{ invoice.amount_paid|inr }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between px-2 py-1 border-top">
+                        <span class="fw-bold">Balance:</span>
+                        <strong class="{% if invoice.balance > 0 %}text-danger{% else %}text-success{% endif %}">
+                            {{ invoice.balance|inr }}
+                        </strong>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Payments Table (if any) -->
+        {% if payments %}
+        <div class="border-top pt-3 mb-3">
+            <h6 class="fw-bold text-dark mb-2">Payments Applied</h6>
+            <table class="table table-sm align-middle small mb-0">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Method</th>
+                        <th>Note</th>
+                        <th class="text-end">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in payments %}
+                    <tr>
+                        <td>{{ p.payment_date|date:"d M Y" }}</td>
+                        <td>{{ p.get_method_display }}</td>
+                        <td>{{ p.note|default:'-' }}</td>
+                        <td class="text-end text-success fw-semibold">{{ p.amount|inr }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+
+        {% if invoice.notes %}
+        <div class="border-top pt-3 small text-muted">
+            <strong>Notes:</strong> {{ invoice.notes }}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Trigger print automatically on desktop print preview
+    window.addEventListener('load', function() {
+        if (!window.location.search.includes('noprint')) {
+            setTimeout(function() { window.print(); }, 400);
+        }
+    });
+</script>
+{% endblock %}
